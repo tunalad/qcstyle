@@ -5,7 +5,7 @@
  *   <http://www.gnu.org/licenses/lgpl-3.0.html>
  *
  *   This file is a part of Artistic Style - an indentation and
- *   reformatting tool for C, C++, C# and Java source files.
+ *   reformatting tool for C and C++ source files.
  *   <http://astyle.sourceforge.net>
  *
  *   Artistic Style is free software: you can redistribute it and/or modify
@@ -92,12 +92,10 @@ ASBeautifier::ASBeautifier()
 
 	setSpaceIndentation(4);
 	setMaxInStatementIndentLength(40);
-	setClassIndent(false);
 	setSwitchIndent(false);
 	setCaseIndent(false);
 	setBlockIndent(false);
 	setBracketIndent(false);
-	setNamespaceIndent(false);
 	setLabelIndent(false);
 	setEmptyLineFill(false);
 	fileType = C_TYPE;
@@ -161,7 +159,6 @@ ASBeautifier::ASBeautifier(const ASBeautifier &other) : ASBase(other)
 	inLineNumber = other.inLineNumber;
 	lineCommentNoBeautify = other.lineCommentNoBeautify;
 	isNonInStatementArray = other.isNonInStatementArray;
-	isSharpAccessor = other.isSharpAccessor;
 
 	// private variables
 	indentString = other.indentString;
@@ -169,22 +166,17 @@ ASBeautifier::ASBeautifier(const ASBeautifier &other) : ASBase(other)
 	previousLastLineHeader = other.previousLastLineHeader;
 	probationHeader = other.probationHeader;
 	isInQuote = other.isInQuote;
-	isInVerbatimQuote = other.isInVerbatimQuote;
 	haveLineContinuationChar = other.haveLineContinuationChar;
 	isInComment = other.isInComment;
 	isInCase = other.isInCase;
 	isInQuestion = other.isInQuestion;
 	isInStatement = other.isInStatement;
 	isInHeader = other.isInHeader;
-	isInTemplate = other.isInTemplate;
+	isInClassHeader = other.isInClassHeader;
 	isInDefine = other.isInDefine;
 	isInDefineDefinition = other.isInDefineDefinition;
-	classIndent = other.classIndent;
-	isInClassHeader = other.isInClassHeader;
-	isInClassHeaderTab = other.isInClassHeaderTab;
 	switchIndent = other.switchIndent;
 	caseIndent = other.caseIndent;
-	namespaceIndent = other.namespaceIndent;
 	bracketIndent = other.bracketIndent;
 	blockIndent = other.blockIndent;
 	labelIndent = other.labelIndent;
@@ -204,7 +196,6 @@ ASBeautifier::ASBeautifier(const ASBeautifier &other) : ASBase(other)
 	blockTabCount = other.blockTabCount;
 	leadingWhiteSpaces = other.leadingWhiteSpaces;
 	maxInStatementIndent = other.maxInStatementIndent;
-	templateDepth = other.templateDepth;
 	prevFinalLineSpaceTabCount = other.prevFinalLineSpaceTabCount;
 	prevFinalLineTabCount = other.prevFinalLineTabCount;
 	defineTabCount = other.defineTabCount;
@@ -288,18 +279,14 @@ void ASBeautifier::init()
 	currentHeader = NULL;
 
 	isInQuote = false;
-	isInVerbatimQuote = false;
 	haveLineContinuationChar = false;
 	isInComment = false;
 	isInStatement = false;
 	isInCase = false;
 	isInQuestion = false;
 	isInClassHeader = false;
-	isInClassHeaderTab = false;
 	isInHeader = false;
-	isInTemplate = false;
 	isInConditional = false;
-	templateDepth = 0;
 	parenDepth = 0;
 	blockTabCount = 0;
 	leadingWhiteSpaces = 0;
@@ -320,7 +307,6 @@ void ASBeautifier::init()
 	blockCommentNoBeautify = false;
 	previousLineProbationTab = false;
 	isNonInStatementArray = false;
-	isSharpAccessor = false;
 	inLineNumber = 0;
 }
 
@@ -330,22 +316,6 @@ void ASBeautifier::init()
 void ASBeautifier::setCStyle()
 {
 	fileType = C_TYPE;
-}
-
-/**
- * set indentation style to Java.
- */
-void ASBeautifier::setJavaStyle()
-{
-	fileType = JAVA_TYPE;
-}
-
-/**
- * set indentation style to C#.
- */
-void ASBeautifier::setSharpStyle()
-{
-	fileType = SHARP_TYPE;
 }
 
 /**
@@ -419,17 +389,6 @@ void ASBeautifier::setBlockIndent(bool state)
 }
 
 /**
- * set the state of the class indentation option. If true, C++ class
- * definitions will be indented one additional indent.
- *
- * @param   state             state of option.
- */
-void ASBeautifier::setClassIndent(bool state)
-{
-	classIndent = state;
-}
-
-/**
  * set the state of the switch indentation option. If true, blocks of 'switch'
  * statements will be indented one additional indent.
  *
@@ -449,18 +408,6 @@ void ASBeautifier::setSwitchIndent(bool state)
 void ASBeautifier::setCaseIndent(bool state)
 {
 	caseIndent = state;
-}
-
-/**
- * set the state of the namespace indentation option.
- * If true, blocks of 'namespace' statements will be indented one
- * additional indent. Otherwise, NO indentation will be added.
- *
- * @param   state             state of option.
- */
-void ASBeautifier::setNamespaceIndent(bool state)
-{
-	namespaceIndent = state;
 }
 
 /**
@@ -606,17 +553,14 @@ string ASBeautifier::beautify(const string &originalLine)
 	string line;
 	bool isInLineComment = false;
 	bool lineStartsInComment = false;
-	bool isInClass = false;
 	bool isInSwitch = false;
-	bool isInOperator = false;
 	bool isSpecialChar = false;
 	bool haveCaseIndent = false;
 	bool closingBracketReached = false;
 	bool shouldIndentBrackettedLine = true;
 	bool previousLineProbation = (probationHeader != NULL);
-	bool isInQuoteContinuation = isInVerbatimQuote | haveLineContinuationChar;
+	bool isInQuoteContinuation = haveLineContinuationChar;
 	char ch = ' ';
-	char prevCh;
 	char tempCh;
 	int tabCount = 0;
 	int spaceTabCount = 0;
@@ -708,12 +652,9 @@ string ASBeautifier::beautify(const string &originalLine)
 	}
 
 	// handle preprocessor commands
-	// except C# region and endregion
 
 	if (!isInComment
-	        && (line[0] == '#' || backslashEndsPrevLine)
-	        && line.compare(0, 7, "#region") != 0
-	        && line.compare(0, 10, "#endregion") != 0)
+	        && (line[0] == '#' || backslashEndsPrevLine))
 	{
 		if (line[0] == '#')
 		{
@@ -837,7 +778,6 @@ string ASBeautifier::beautify(const string &originalLine)
 		activeBeautifierStack->back()->inLineNumber = inLineNumber;
 		activeBeautifierStack->back()->lineCommentNoBeautify = lineCommentNoBeautify;
 		activeBeautifierStack->back()->isNonInStatementArray = isNonInStatementArray;
-		activeBeautifierStack->back()->isSharpAccessor = isSharpAccessor;
 		// must return originalLine not the trimmed line
 		return activeBeautifierStack->back()->beautify(originalLine);
 	}
@@ -849,38 +789,17 @@ string ASBeautifier::beautify(const string &originalLine)
 
 	for (i = 0; i < (int) headerStack->size(); i++)
 	{
-		isInClass = false;
-
 		if (blockIndent)
 		{
 			// do NOT indent opening block for these headers
-			if (!((*headerStack)[i] == &AS_NAMESPACE
-			        || (*headerStack)[i] == &AS_CLASS
-			        || (*headerStack)[i] == &AS_STRUCT
+			if (!((*headerStack)[i] == &AS_STRUCT
 			        || (*headerStack)[i] == &AS_UNION
-			        || (*headerStack)[i] == &AS_CONST
-			        || (*headerStack)[i] == &AS_INTERFACE
-			        || (*headerStack)[i] == &AS_THROWS
-			        || (*headerStack)[i] == &AS_STATIC))
+			        || (*headerStack)[i] == &AS_CONST))
 				++tabCount;
 		}
 		else if (!(i > 0 && (*headerStack)[i-1] != &AS_OPEN_BRACKET
 		           && (*headerStack)[i] == &AS_OPEN_BRACKET))
 			++tabCount;
-
-		if (!isJavaStyle() && !namespaceIndent && i >= 1
-		        && (*headerStack)[i-1] == &AS_NAMESPACE
-		        && (*headerStack)[i] == &AS_OPEN_BRACKET)
-			--tabCount;
-
-		if (isCStyle() && i >= 1
-		        && (*headerStack)[i-1] == &AS_CLASS
-		        && (*headerStack)[i] == &AS_OPEN_BRACKET)
-		{
-			if (classIndent)
-				++tabCount;
-			isInClass = true;
-		}
 
 		// is the switchIndent option is on, indent switch statements an additional indent.
 		else if (switchIndent && i > 1 &&
@@ -895,29 +814,13 @@ string ASBeautifier::beautify(const string &originalLine)
 	}
 
 	if (!lineStartsInComment
-	        && isCStyle()
-	        && isInClass
-	        && classIndent
+	        && isInSwitch
+	        && switchIndent
 	        && headerStack->size() >= 2
-	        && (*headerStack)[headerStack->size()-2] == &AS_CLASS
+	        && (*headerStack)[headerStack->size()-2] == &AS_SWITCH
 	        && (*headerStack)[headerStack->size()-1] == &AS_OPEN_BRACKET
 	        && line[0] == '}')
 		--tabCount;
-
-	else if (!lineStartsInComment
-	         && isInSwitch
-	         && switchIndent
-	         && headerStack->size() >= 2
-	         && (*headerStack)[headerStack->size()-2] == &AS_SWITCH
-	         && (*headerStack)[headerStack->size()-1] == &AS_OPEN_BRACKET
-	         && line[0] == '}')
-		--tabCount;
-
-	if (isInClassHeader)
-	{
-		isInClassHeaderTab = true;
-		tabCount += 2;
-	}
 
 	if (isInConditional)
 	{
@@ -932,7 +835,6 @@ string ASBeautifier::beautify(const string &originalLine)
 		outBuffer.append(1, line[i]);
 
 		tempCh = line[i];
-		prevCh = ch;
 		ch = tempCh;
 
 		if (isWhiteSpace(ch))
@@ -940,7 +842,7 @@ string ASBeautifier::beautify(const string &originalLine)
 
 		// handle special characters (i.e. backslash+character such as \n, \t, ...)
 
-		if (isInQuote && !isInVerbatimQuote)
+		if (isInQuote)
 		{
 			if (isSpecialChar)
 			{
@@ -972,21 +874,6 @@ string ASBeautifier::beautify(const string &originalLine)
 			{
 				quoteChar = ch;
 				isInQuote = true;
-				if (isSharpStyle() && prevCh == '@')
-					isInVerbatimQuote = true;
-			}
-			else if (isInVerbatimQuote && ch == '"')
-			{
-				if (peekNextChar(line, i) == '"')           // check consecutive quotes
-				{
-					outBuffer.append(1, '"');
-					i++;
-				}
-				else
-				{
-					isInQuote = false;
-					isInVerbatimQuote = false;
-				}
 			}
 			else if (quoteChar == ch)
 			{
@@ -1025,13 +912,6 @@ string ASBeautifier::beautify(const string &originalLine)
 			blockCommentNoIndent = false;           // ok to indent next comment
 			continue;
 		}
-		// treat C# '#region' and '#endregion' statements as a line comment
-		else if (isSharpStyle() &&
-		         (line.compare(i, 7, "#region") == 0 || line.compare(i, 10, "#endregion") == 0))
-		{
-			isInLineComment = true;
-			continue;
-		}
 
 		if (isInComment || isInLineComment)
 			continue;
@@ -1040,22 +920,17 @@ string ASBeautifier::beautify(const string &originalLine)
 
 		if (probationHeader != NULL)
 		{
-			if (((probationHeader == &AS_STATIC || probationHeader == &AS_CONST) && ch == '{')
-			        || (probationHeader == &AS_SYNCHRONIZED && ch == '('))
+			if (probationHeader == &AS_CONST && ch == '{')
 			{
 				// insert the probation header as a new header
 				isInHeader = true;
 				headerStack->push_back(probationHeader);
 
-				// handle the specific probation header
-				isInConditional = (probationHeader == &AS_SYNCHRONIZED);
-
 				isInStatement = false;
 				// if the probation comes from the previous line, then indent by 1 tab count.
 				if (previousLineProbation
 				        && ch == '{'
-				        && !(blockIndent
-				             && (probationHeader == &AS_CONST || probationHeader == &AS_STATIC)))
+				        && !(blockIndent && probationHeader == &AS_CONST))
 				{
 					tabCount++;
 					previousLineProbationTab = true;
@@ -1083,50 +958,19 @@ string ASBeautifier::beautify(const string &originalLine)
 		else
 			currentHeader = NULL;
 
-		if (isCStyle() && isInTemplate
-		        && (ch == '<' || ch == '>')
-		        &&  findOperator(line, i, nonAssignmentOperators) == NULL)
-		{
-			if (ch == '<')
-			{
-				++templateDepth;
-			}
-			else if (ch == '>')
-			{
-				if (--templateDepth <= 0)
-				{
-					if (isInTemplate)
-						ch = ';';
-					else
-						ch = 't';
-					isInTemplate = false;
-					templateDepth = 0;
-				}
-			}
-		}
-
 		// handle parenthesies
 		if (ch == '(' || ch == '[' || ch == ')' || ch == ']')
 		{
 			if (ch == '(' || ch == '[')
 			{
-				isInOperator = false;
 				// if have a struct header, this is a declaration not a definition
 				if (ch == '('
-				        && (isInClassHeader || isInClassHeaderTab)
+				        && isInClassHeader
 				        && headerStack->size() > 0
 				        && headerStack->back() == &AS_STRUCT)
 				{
 					headerStack->pop_back();
 					isInClassHeader = false;
-					// -1 for isInClassHeader, -2 for isInClassHeaderTab
-					if (isInClassHeaderTab)
-					{
-						tabCount -= 3;
-						isInClassHeaderTab = false;
-					}
-					if (tabCount < 0)
-						tabCount = 0;
 				}
 
 				if (parenDepth == 0)
@@ -1188,7 +1032,6 @@ string ASBeautifier::beautify(const string &originalLine)
 			                      || prevNonSpaceCh == ';'
 			                      || peekNextChar(line, i) == '{'
 			                      || isNonInStatementArray
-			                      || isSharpAccessor
 			                      || isInClassHeader
 			                      || (isInDefine &&
 			                          (prevNonSpaceCh == '('
@@ -1205,11 +1048,6 @@ string ASBeautifier::beautify(const string &originalLine)
 						break;
 					}
 			}
-
-			// TODO: TEMPORARY??? fix to give C# }) statements a full indent
-			// check for anonymous method
-			if (isBlockOpener && isSharpStyle() && !parenIndentStack->empty())
-				isBlockOpener = false;
 
 			bracketBlockStateStack->push_back(isBlockOpener);
 
@@ -1228,24 +1066,7 @@ string ASBeautifier::beautify(const string &originalLine)
 
 			++lineOpeningBlocksNum;
 
-			if (isInClassHeaderTab)
-			{
-				isInClassHeaderTab = false;
-				// decrease tab count if bracket is broken
-				size_t firstChar = line.find_first_not_of(" \t");
-				if (firstChar != string::npos)
-					if (line[firstChar] == '{' && (int) firstChar == i)
-						tabCount -= 2;
-			}
-
-			if (bracketIndent && !namespaceIndent && headerStack->size() > 0
-			        && (*headerStack).back() == &AS_NAMESPACE)
-			{
-				shouldIndentBrackettedLine = false;
-				tabCount--;
-			}
-
-			// do not allow inStatementIndent - should occur for Java files only
+			// do not allow inStatementIndent
 			if (inStatementIndentStack->size() > 0)
 			{
 				spaceTabCount = 0;
@@ -1286,9 +1107,7 @@ string ASBeautifier::beautify(const string &originalLine)
 					newHeader = NULL;
 				// the following accessor definitions are NOT headers
 				// goto default; is NOT a header
-				// default(int) keyword in C# is NOT a header
-				else if ((newHeader == &AS_GET || newHeader == &AS_SET || newHeader == &AS_DEFAULT)
-				         && (peekChar == ';' ||  peekChar == '('))
+				else if (newHeader == &AS_DEFAULT && (peekChar == ';' ||  peekChar == '('))
 				{
 					newHeader = NULL;
 				}
@@ -1365,29 +1184,6 @@ string ASBeautifier::beautify(const string &originalLine)
 					}
 				}
 				// check if 'catch' closes a previous 'try' or 'catch'
-				else if (newHeader == &AS_CATCH || newHeader == &AS_FINALLY)
-				{
-					if (lastTempStack != NULL)
-					{
-						int indexOfTry = indexOf(*lastTempStack, &AS_TRY);
-						if (indexOfTry == -1)
-							indexOfTry = indexOf(*lastTempStack, &AS_CATCH);
-						if (indexOfTry != -1)
-						{
-							// recreate the header list in headerStack up to the previous 'try'
-							// from the temporary snapshot stored in lastTempStack.
-							int restackSize = lastTempStack->size() - indexOfTry - 1;
-							for (int r = 0; r < restackSize; r++)
-							{
-								headerStack->push_back(lastTempStack->back());
-								lastTempStack->pop_back();
-							}
-
-							if (!closingBracketReached)
-								tabCount += restackSize;
-						}
-					}
-				}
 				else if (newHeader == &AS_CASE)
 				{
 					isInCase = true;
@@ -1402,32 +1198,11 @@ string ASBeautifier::beautify(const string &originalLine)
 					isInCase = true;
 					--tabCount;
 				}
-				else if (newHeader == &AS_STATIC
-				         || newHeader == &AS_SYNCHRONIZED
-				         || (newHeader == &AS_CONST && isCStyle()))
-				{
-					if (!headerStack->empty() &&
-					        (headerStack->back() == &AS_STATIC
-					         || headerStack->back() == &AS_SYNCHRONIZED
-					         || headerStack->back() == &AS_CONST))
-					{
-						isIndentableHeader = false;
-					}
-					else
-					{
-						isIndentableHeader = false;
-						probationHeader = newHeader;
-					}
-				}
 				else if (newHeader == &AS_CONST)
 				{
 					isIndentableHeader = false;
-				}
-				else if (newHeader == &AS_TEMPLATE)
-				{
-					if (isCStyle())
-						isInTemplate = true;
-					isIndentableHeader = false;
+					if (headerStack->empty() || headerStack->back() != &AS_CONST)
+						probationHeader = newHeader;
 				}
 
 				if (isIndentableHeader)
@@ -1481,19 +1256,6 @@ string ASBeautifier::beautify(const string &originalLine)
 				// so do nothing special
 			}
 
-			else if (isCStyle() && isInClass && prevNonSpaceCh != ')')
-			{
-				--tabCount;
-				// found a 'private:' or 'public:' inside a class definition
-				// so do nothing special
-			}
-
-			else if (isJavaStyle() && lastLineHeader == &AS_FOR)
-			{
-				// found a java for-each statement
-				// so do nothing special
-			}
-
 			else if (isCStyle() && prevNonSpaceCh == ')' && !isInCase)
 			{
 				isInClassHeader = true;
@@ -1508,7 +1270,7 @@ string ASBeautifier::beautify(const string &originalLine)
 					isInCase = false;
 					ch = ';'; // from here on, treat char as ';'
 				}
-				else if (isCStyle() || (isSharpStyle() && peekNextChar(line, i) == ';'))    // is in a label (e.g. 'label1:')
+				else if (isCStyle())    // is in a label (e.g. 'label1:')
 				{
 					if (labelIndent)
 						--tabCount; // unindent label by one indent
@@ -1590,11 +1352,6 @@ string ASBeautifier::beautify(const string &originalLine)
 					}
 					headerStack->pop_back();
 
-					// do not indent namespace bracket unless namespaces are indented
-					if (!namespaceIndent && headerStack->size() > 0
-					        && (*headerStack).back() == &AS_NAMESPACE)
-						shouldIndentBrackettedLine = false;
-
 					if (!tempStacks->empty())
 					{
 						vector<const string*> *temp =  tempStacks->back();
@@ -1639,22 +1396,13 @@ string ASBeautifier::beautify(const string &originalLine)
 		{
 			// check for preBlockStatements in C/C++ ONLY if not within parenthesies
 			// (otherwise 'struct XXX' statements would be wrongly interpreted...)
-			if (!isInTemplate && !(isCStyle() && parenDepth > 0))
+			if (!(isCStyle() && parenDepth > 0))
 			{
 				const string *newHeader = findHeader(line, i, preBlockStatements);
 				if (newHeader != NULL)
 				{
 					isInClassHeader = true;
-
-					if (!isSharpStyle())
-						headerStack->push_back(newHeader);
-					// do not need 'where' in the headerStack
-					// do not need second 'class' statement in a row
-					else if (!(newHeader == &AS_WHERE
-					           || (newHeader == &AS_CLASS
-					               && headerStack->size() > 0
-					               && headerStack->back() == &AS_CLASS)))
-						headerStack->push_back(newHeader);
+					headerStack->push_back(newHeader);
 
 					outBuffer.append(newHeader->substr(1));
 					i += newHeader->length() - 1;
@@ -1668,22 +1416,12 @@ string ASBeautifier::beautify(const string &originalLine)
 				// must bypass the header before registering the in statement
 				outBuffer.append(foundIndentableHeader->substr(1));
 				i += foundIndentableHeader->length() - 1;
-				if (!isInOperator && !isInTemplate && !isNonInStatementArray)
+				if (!isNonInStatementArray)
 				{
 					registerInStatementIndent(line, i, spaceTabCount, 0, false);
 					isInStatement = true;
 				}
 				continue;
-			}
-
-			if (isCStyle() && findKeyword(line, i, AS_OPERATOR))
-				isInOperator = true;
-
-			// "new" operator is a pointer, not a calculation
-			if (findKeyword(line, i, AS_NEW))
-			{
-				if (prevNonSpaceCh == '=' && isInStatement && !inStatementIndentStack->empty())
-					inStatementIndentStack->back() = 0;
 			}
 
 			// append the entire name for all others
@@ -1732,7 +1470,7 @@ string ASBeautifier::beautify(const string &originalLine)
 					i += foundAssignmentOp->length() - 1;
 				}
 
-				if (!isInOperator && !isInTemplate && !isNonInStatementArray)
+				if (!isNonInStatementArray)
 				{
 					registerInStatementIndent(line, i, spaceTabCount, 0, false);
 					isInStatement = true;
@@ -1771,16 +1509,6 @@ string ASBeautifier::beautify(const string &originalLine)
 	         && lineOpeningBlocksNum == lineClosingBlocksNum
 	         && previousLineProbationTab)
 		--tabCount; //lineOpeningBlocksNum - (blockIndent ? 1 : 0);
-
-	// correctly indent class continuation lines...
-	else if (!lineStartsInComment
-	         && isInClassHeaderTab
-	         && !blockIndent
-	         && outBuffer.length() > 0
-	         && lineOpeningBlocksNum == 0
-	         && lineOpeningBlocksNum == lineClosingBlocksNum
-	         && (headerStack->size() > 0 && headerStack->back() == &AS_CLASS))
-		--tabCount;
 
 	if (tabCount < 0)
 		tabCount = 0;

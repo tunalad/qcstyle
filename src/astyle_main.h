@@ -5,7 +5,7 @@
  *   <http://www.gnu.org/licenses/lgpl-3.0.html>
  *
  *   This file is a part of Artistic Style - an indentation and
- *   reformatting tool for C, C++, C# and Java source files.
+ *   reformatting tool for C and C++ source files.
  *   <http://astyle.sourceforge.net>
  *
  *   Artistic Style is free software: you can redistribute it and/or modify
@@ -41,13 +41,6 @@
 #include <sys/stat.h>
 #endif                         // end compiler checks
 
-#ifdef ASTYLE_JNI
-#include <jni.h>
-#ifndef ASTYLE_LIB    // ASTYLE_LIB must be defined for ASTYLE_JNI
-#define ASTYLE_LIB
-#endif
-#endif  //  ASTYLE_JNI
-
 // for G++ implementation of string.compare:
 #if defined(__GNUC__) && __GNUC__ < 3
 #error - Use GNU C compiler release 3 or higher
@@ -65,7 +58,7 @@ namespace astyle
 
 //----------------------------------------------------------------------------
 // ASStreamIterator class
-// typename will be istringstream for GUI and istream otherwise
+// typename will be istream for console input
 // ASSourceIterator is an abstract class defined in astyle.h
 //----------------------------------------------------------------------------
 
@@ -192,22 +185,6 @@ bool parseOptions(astyle::ASFormatter &formatter, const ITER &optionsBegin,
                   const ITER &optionsEnd, const string &errorInfo);
 
 }   // end of namespace astyle
-
-//----------------------------------------------------------------------------
-// declarations for java native interface (JNI) build
-// global because they are called externally and are NOT part of the namespace
-//----------------------------------------------------------------------------
-
-#ifdef ASTYLE_JNI
-void  STDCALL javaErrorHandler(int errorNumber, char* errorMessage);
-char* STDCALL javaMemoryAlloc(unsigned long memoryNeeded);
-// the following function names are constructed from method names in the calling java program
-extern "C"  EXPORT
-jstring STDCALL Java_AStyleInterface_AStyleGetVersion(JNIEnv* env, jclass);
-extern "C"  EXPORT
-jstring STDCALL Java_AStyleInterface_AStyleMain
-(JNIEnv* env, jobject obj, jstring textInJava, jstring optionsJava);
-#endif //  ASTYLE_JNI
 
 
 #endif // closes ASTYLE_MAIN_H

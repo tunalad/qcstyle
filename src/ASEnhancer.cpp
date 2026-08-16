@@ -5,7 +5,7 @@
  *   <http://www.gnu.org/licenses/lgpl-3.0.html>
  *
  *   This file is a part of Artistic Style - an indentation and
- *   reformatting tool for C, C++, C# and Java source files.
+ *   reformatting tool for C and C++ source files.
  *   <http://astyle.sourceforge.net>
  *
  *   Artistic Style is free software: you can redistribute it and/or modify

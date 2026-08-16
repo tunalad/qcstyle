@@ -5,7 +5,7 @@
  *   <http://www.gnu.org/licenses/lgpl-3.0.html>
  *
  *   This file is a part of Artistic Style - an indentation and
- *   reformatting tool for C, C++, C# and Java source files.
+ *   reformatting tool for C and C++ source files.
  *   <http://astyle.sourceforge.net>
  *
  *   Artistic Style is free software: you can redistribute it and/or modify
@@ -69,24 +69,11 @@ char g_fileSeparator = '/';
 bool g_isCaseSensitive = true;
 #endif
 
-#ifdef ASTYLE_LIB
-// library build variables
-stringstream* _err = NULL;
-bool g_modeManuallySet = false;
-#else
 // console build variables
 int _CRT_glob = 0;               // turn off MinGW automatic file globbing
 ostream* _err = &cerr;           // direct error messages to cerr
 bool g_modeManuallySet = false;  // file mode is set by an option
 ASConsole g_console;             // class to encapsulate console variables
-#endif
-
-#ifdef ASTYLE_JNI
-// java library build variables
-JNIEnv*   g_env;
-jobject   g_obj;
-jmethodID g_mid;
-#endif
 
 const char* _version = "1.23";
 
@@ -186,18 +173,8 @@ bool isParamOption(const string &arg, const char *option)
 
 void isOptionError(const string &arg, const string &errorInfo)
 {
-#ifdef ASTYLE_LIB
-	if (_err->str().length() == 0)
-	{
-		(*_err) << errorInfo << endl;   // need main error message
-		(*_err) << arg;                 // output the option in error
-	}
-	else
-		(*_err) << endl << arg;         // put endl after previous option
-#else
 	if (errorInfo.length() > 0)         // to avoid a compiler warning
 		(*_err) << "Error in param: " << arg << endl;
-#endif
 }
 
 bool isParamOption(const string &arg, const char *option1, const char *option2)
@@ -210,10 +187,6 @@ bool parseOption(ASFormatter &formatter, const string &arg, const string &errorI
 	if ( IS_OPTION(arg, "style=allman") || IS_OPTION(arg, "style=ansi")  || IS_OPTION(arg, "style=bsd") )
 	{
 		formatter.setFormattingStyle(STYLE_ALLMAN);
-	}
-	else if ( IS_OPTION(arg, "style=java") )
-	{
-		formatter.setFormattingStyle(STYLE_JAVA);
 	}
 	else if ( IS_OPTION(arg, "style=k&r") || IS_OPTION(arg, "style=k/r") )
 	{
@@ -245,39 +218,27 @@ bool parseOption(ASFormatter &formatter, const string &arg, const string &errorI
 		string styleParam = GET_PARAM(arg, "A");
 		if (styleParam.length() > 0)
 			style = atoi(styleParam.c_str());
-		if (style < 1 || style > 8)
+		if (style < 1 || style > 7)
 			isOptionError(arg, errorInfo);
 		else if (style == 1)
 			formatter.setFormattingStyle(STYLE_ALLMAN);
 		else if (style == 2)
-			formatter.setFormattingStyle(STYLE_JAVA);
-		else if (style == 3)
 			formatter.setFormattingStyle(STYLE_KandR);
-		else if (style == 4)
+		else if (style == 3)
 			formatter.setFormattingStyle(STYLE_STROUSTRUP);
-		else if (style == 5)
+		else if (style == 4)
 			formatter.setFormattingStyle(STYLE_WHITESMITH);
-		else if (style == 6)
+		else if (style == 5)
 			formatter.setFormattingStyle(STYLE_BANNER);
-		else if (style == 7)
+		else if (style == 6)
 			formatter.setFormattingStyle(STYLE_GNU);
-		else if (style == 8)
+		else if (style == 7)
 			formatter.setFormattingStyle(STYLE_LINUX);
 	}
-	// must check for mode=cs before mode=c !!!
-	else if ( IS_OPTION(arg, "mode=cs") )
-	{
-		formatter.setSharpStyle();
-		g_modeManuallySet = true;
-	}
+	// must check for mode=c
 	else if ( IS_OPTION(arg, "mode=c") )
 	{
 		formatter.setCStyle();
-		g_modeManuallySet = true;
-	}
-	else if ( IS_OPTION(arg, "mode=java") )
-	{
-		formatter.setJavaStyle();
 		g_modeManuallySet = true;
 	}
 	else if ( isParamOption(arg, "t", "indent=tab=") )
@@ -354,14 +315,6 @@ bool parseOption(ASFormatter &formatter, const string &arg, const string &errorI
 	else if ( IS_OPTIONS(arg, "G", "indent-blocks") )
 	{
 		formatter.setBlockIndent(true);
-	}
-	else if ( IS_OPTIONS(arg, "N", "indent-namespaces") )
-	{
-		formatter.setNamespaceIndent(true);
-	}
-	else if ( IS_OPTIONS(arg, "C", "indent-classes") )
-	{
-		formatter.setClassIndent(true);
 	}
 	else if ( IS_OPTIONS(arg, "S", "indent-switches") )
 	{
@@ -457,7 +410,7 @@ bool parseOption(ASFormatter &formatter, const string &arg, const string &errorI
 	// depreciated in release 1.22 - may be removed at an appropriate time
 	else if ( IS_OPTION(arg, "style=kr") )
 	{
-		formatter.setFormattingStyle(STYLE_JAVA);
+		formatter.setFormattingStyle(STYLE_KandR);
 	}
 	else if ( isParamOption(arg, "T", "force-indent=tab=") )
 	{
@@ -506,12 +459,7 @@ bool parseOption(ASFormatter &formatter, const string &arg, const string &errorI
 		formatter.setOperatorPaddingMode(true);
 	}
 	// end depreciated options //////////////////////////////////////////////////////////////////////////////
-#ifdef ASTYLE_LIB
-	// End of options used by GUI
-	else
-		isOptionError(arg, errorInfo);
-#else
-	// Options used by only console
+	// Options used by console
 	else if ( IS_OPTIONS(arg, "n", "suffix=none") )
 	{
 		g_console.noBackup = true;
@@ -562,7 +510,6 @@ bool parseOption(ASFormatter &formatter, const string &arg, const string &errorI
 		(*_err) << errorInfo << arg << endl;
 		return false; // invalid option
 	}
-#endif
 // End of parseOption function
 	return true; //o.k.
 }
@@ -571,7 +518,7 @@ bool parseOption(ASFormatter &formatter, const string &arg, const string &errorI
 
 //--------------------------------------------------------------------------------------
 // ASStreamIterator class
-// typename will be istringstream for GUI and istream otherwise
+// typename will be istream for console input
 //--------------------------------------------------------------------------------------
 
 template<typename T>
@@ -734,10 +681,8 @@ void ASStreamIterator<T>::peekReset()
 	peekStart = 0;
 }
 
-#ifndef ASTYLE_LIB
 //--------------------------------------------------------------------------------------
 // ASConsole class
-// main function will be included only in the console build
 //--------------------------------------------------------------------------------------
 
 void ASConsole::error(const char *why, const char* what) const
@@ -774,14 +719,7 @@ bool ASConsole::formatFile(const string &fileName, ASFormatter &formatter) const
 	// Unless a specific language mode has been set, set the language mode
 	// according to the file's suffix.
 	if (!g_modeManuallySet)
-	{
-		if (stringEndsWith(fileName, string(".java")))
-			formatter.setJavaStyle();
-		else if (stringEndsWith(fileName, string(".cs")))
-			formatter.setSharpStyle();
-		else
-			formatter.setCStyle();
-	}
+		formatter.setCStyle();
 
 	// save the filename used by the trace macros
 	size_t fname = fileName.find_last_of(g_fileSeparator);
@@ -1147,7 +1085,7 @@ void ASConsole::printHelp() const
 	(*_err) << "Wildcards (* and ?) may be used in the filename.\n";
 	(*_err) << "A \'recursive\' option can process directories recursively.\n";
 	(*_err) << endl;
-	(*_err) << "By default, astyle is set up to indent C/C++/C#/Java files, with 4 spaces\n";
+	(*_err) << "By default, astyle is set up to indent C/C++ files, with 4 spaces\n";
 	(*_err) << "per indent, a maximal indentation of 40 spaces inside continuous statements,\n";
 	(*_err) << "and NO formatting.\n";
 	(*_err) << endl;
@@ -1163,33 +1101,29 @@ void ASConsole::printHelp() const
 	(*_err) << "    Allman style formatting/indenting.\n";
 	(*_err) << "    Broken brackets.\n";
 	(*_err) << endl;
-	(*_err) << "    --style=java  OR  -A2\n";
-	(*_err) << "    Java style formatting/indenting.\n";
-	(*_err) << "    Attached brackets.\n";
-	(*_err) << endl;
-	(*_err) << "    --style=k&r  OR  --style=k/r  OR  -A3\n";
+	(*_err) << "    --style=k&r  OR  --style=k/r  OR  -A2\n";
 	(*_err) << "    Kernighan & Ritchie style formatting/indenting.\n";
 	(*_err) << "    Linux brackets.\n";
 	(*_err) << endl;
-	(*_err) << "    --style=stroustrup  OR  -A4\n";
+	(*_err) << "    --style=stroustrup  OR  -A3\n";
 	(*_err) << "    Stroustrup style formatting/indenting.\n";
 	(*_err) << "    Stroustrup brackets.\n";
 	(*_err) << endl;
-	(*_err) << "    --style=whitesmith  OR  -A5\n";
+	(*_err) << "    --style=whitesmith  OR  -A4\n";
 	(*_err) << "    Whitesmith style formatting/indenting.\n";
 	(*_err) << "    Broken, indented brackets.\n";
-	(*_err) << "    Indented class blocks and switch blocks.\n";
+	(*_err) << "    Indented switch blocks.\n";
 	(*_err) << endl;
-	(*_err) << "    --style=banner  OR  -A6\n";
+	(*_err) << "    --style=banner  OR  -A5\n";
 	(*_err) << "    Banner style formatting/indenting.\n";
 	(*_err) << "    Attached, indented brackets.\n";
-	(*_err) << "    Indented class blocks and switch blocks.\n";
+	(*_err) << "    Indented switch blocks.\n";
 	(*_err) << endl;
-	(*_err) << "    --style=gnu  OR  -A7\n";
+	(*_err) << "    --style=gnu  OR  -A6\n";
 	(*_err) << "    GNU style formatting/indenting.\n";
 	(*_err) << "    Broken brackets, indented blocks, indent is 2 spaces.\n";
 	(*_err) << endl;
-	(*_err) << "    --style=linux  OR  -A8\n";
+	(*_err) << "    --style=linux  OR  -A7\n";
 	(*_err) << "    GNU style formatting/indenting.\n";
 	(*_err) << "    Linux brackets, indent is 8 spaces.\n";
 	(*_err) << endl;
@@ -1221,7 +1155,7 @@ void ASConsole::printHelp() const
 	(*_err) << "    Break brackets from pre-block code (i.e. ANSI C/C++ style).\n";
 	(*_err) << endl;
 	(*_err) << "    --brackets=attach  OR  -a\n";
-	(*_err) << "    Attach brackets to pre-block code (i.e. Java/K&R style).\n";
+	(*_err) << "    Attach brackets to pre-block code (i.e. K&R style).\n";
 	(*_err) << endl;
 	(*_err) << "    --brackets=linux  OR  -l\n";
 	(*_err) << "    Break definition-block brackets and attach command-block\n";
@@ -1232,11 +1166,6 @@ void ASConsole::printHelp() const
 	(*_err) << endl;
 	(*_err) << "Indentation options:\n";
 	(*_err) << "--------------------\n";
-	(*_err) << "    --indent-classes  OR  -C\n";
-	(*_err) << "    Indent 'class' blocks, so that the inner 'public:',\n";
-	(*_err) << "    'protected:' and 'private: headers are indented in\n";
-	(*_err) << "    relation to the class block.\n";
-	(*_err) << endl;
 	(*_err) << "    --indent-switches  OR  -S\n";
 	(*_err) << "    Indent 'switch' blocks, so that the inner 'case XXX:'\n";
 	(*_err) << "    headers are indented in relation to the switch block.\n";
@@ -1250,9 +1179,6 @@ void ASConsole::printHelp() const
 	(*_err) << endl;
 	(*_err) << "    --indent-brackets  OR  -B\n";
 	(*_err) << "    Add extra indentation to '{' and '}' block brackets.\n";
-	(*_err) << endl;
-	(*_err) << "    --indent-namespaces  OR  -N\n";
-	(*_err) << "    Indent the contents of namespace blocks.\n";
 	(*_err) << endl;
 	(*_err) << "    --indent-labels  OR  -L\n";
 	(*_err) << "    Indent labels so that they appear one indent less than\n";
@@ -1273,7 +1199,7 @@ void ASConsole::printHelp() const
 	(*_err) << "Formatting options:\n";
 	(*_err) << "-------------------\n";
 	(*_err) << "    --break-blocks  OR  -f\n";
-	(*_err) << "    Insert empty lines around unrelated blocks, labels, classes, ...\n";
+	(*_err) << "    Insert empty lines around unrelated blocks, labels, ...\n";
 	(*_err) << endl;
 	(*_err) << "    --break-blocks=all  OR  -F\n";
 	(*_err) << "    Like --break-blocks, except also insert empty lines \n";
@@ -1324,12 +1250,6 @@ void ASConsole::printHelp() const
 	(*_err) << endl;
 	(*_err) << "    --mode=c\n";
 	(*_err) << "    Indent a C or C++ source file (this is the default).\n";
-	(*_err) << endl;
-	(*_err) << "    --mode=java\n";
-	(*_err) << "    Indent a Java source file.\n";
-	(*_err) << endl;
-	(*_err) << "    --mode=cs\n";
-	(*_err) << "    Indent a C# source file.\n";
 	(*_err) << endl;
 	(*_err) << "Other options:\n";
 	(*_err) << "--------------\n";
@@ -1801,7 +1721,6 @@ int ASConsole::wildcmp(const char *wild, const char *data) const
 	return !*wild;
 }
 
-#endif
 // *******************   end of console functions   ***********************************************
 
 }   // end of namespace astyle
@@ -1810,157 +1729,6 @@ int ASConsole::wildcmp(const char *wild, const char *data) const
 
 using namespace astyle;
 
-#ifdef ASTYLE_JNI
-// *************************   JNI functions   *****************************************************
-// called by a java program to get the version number
-// the function name is constructed from method names in the calling java program
-extern "C"  EXPORT
-jstring STDCALL Java_AStyleInterface_AStyleGetVersion(JNIEnv* env, jclass)
-{
-	return env->NewStringUTF(_version);
-}
-
-// called by a java program to format the source code
-// the function name is constructed from method names in the calling java program
-extern "C"  EXPORT
-jstring STDCALL Java_AStyleInterface_AStyleMain(JNIEnv* env,
-        jobject obj,
-        jstring textInJava,
-        jstring optionsJava)
-{
-	g_env = env;                                // make object available globally
-	g_obj = obj;                                // make object available globally
-
-	jstring textErr = env->NewStringUTF("");    // zero length text returned if an error occurs
-
-	// get the method ID
-	jclass cls = env->GetObjectClass(obj);
-	g_mid = env->GetMethodID(cls, "ErrorHandler","(ILjava/lang/String;)V");
-	if (g_mid == 0)
-	{
-		cout << "Cannot find java method ErrorHandler" << endl;
-		return textErr;
-	}
-
-	// convert jstring to char*
-	const char* textIn = env->GetStringUTFChars(textInJava, NULL);
-	const char* options = env->GetStringUTFChars(optionsJava, NULL);
-
-	// call the C++ formatting function
-	char* textOut = AStyleMain(textIn, options, javaErrorHandler, javaMemoryAlloc);
-	// if an error message occurred it was displayed by errorHandler
-	if (textOut == NULL)
-		return textErr;
-
-	// release memory
-	jstring textOutJava = env->NewStringUTF(textOut);
-	delete [] textOut;
-	env->ReleaseStringUTFChars(textInJava, textIn);
-	env->ReleaseStringUTFChars(optionsJava, options);
-
-	return textOutJava;
-}
-
-// Call the Java error handler
-void STDCALL javaErrorHandler(int errorNumber, char* errorMessage)
-{
-	jstring errorMessageJava = g_env->NewStringUTF(errorMessage);
-	g_env->CallVoidMethod(g_obj, g_mid, errorNumber, errorMessageJava);
-}
-
-// Allocate memory for the formatted text
-char* STDCALL javaMemoryAlloc(unsigned long memoryNeeded)
-{
-	// error condition is checked after return from AStyleMain
-	char* buffer = new(nothrow) char [memoryNeeded];
-	return buffer;
-}
-#endif
-
-#ifdef ASTYLE_LIB
-// *************************   GUI functions   ****************************************************
-/*
- * IMPORTANT VC DLL linker must have the parameter  /EXPORT:AStyleMain=_AStyleMain@16
- *                                                  /EXPORT:AStyleGetVersion=_AStyleGetVersion@0
- */
-extern "C" EXPORT char* STDCALL
-AStyleMain(const char* pSourceIn,          // pointer to the source to be formatted
-           const char* pOptions,           // pointer to AStyle options, separated by \n
-           fpError fpErrorHandler,         // pointer to error handler function
-           fpAlloc fpMemoryAlloc)          // pointer to memory allocation function
-{
-	if (fpErrorHandler == NULL)         // cannot display a message if no error handler
-		return NULL;
-
-	if (pSourceIn == NULL)
-	{
-		fpErrorHandler(101, (char*)"No pointer to source input.");
-		return NULL;
-	}
-	if (pOptions == NULL)
-	{
-		fpErrorHandler(102, (char*)"No pointer to AStyle options.");
-		return NULL;
-	}
-	if (fpMemoryAlloc == NULL)
-	{
-		fpErrorHandler(103, (char*)"No pointer to memory allocation function.");
-		return NULL;
-	}
-
-	ASFormatter formatter;
-
-	vector<string> optionsVector;
-	istringstream opt(pOptions);
-	_err = new stringstream;
-	g_modeManuallySet = false;
-
-	importOptions(opt, optionsVector);
-
-	parseOptions(formatter,
-	             optionsVector.begin(),
-	             optionsVector.end(),
-	             "Invalid Artistic Style options.\n"
-	             "The following options were not processed:");
-
-	if (_err->str().length() > 0)
-		fpErrorHandler(210, (char*) _err->str().c_str());
-
-	delete _err;
-	_err = NULL;
-
-	istringstream in(pSourceIn);
-	ASStreamIterator<istringstream> streamIterator(&in);
-	ostringstream out;
-	formatter.init(&streamIterator);
-
-	while (formatter.hasMoreLines())
-	{
-		out << formatter.nextLine();
-		if (formatter.hasMoreLines())
-			out << streamIterator.getOutputEOL();
-	}
-
-	unsigned long textSizeOut = out.str().length();
-	char* pTextOut = fpMemoryAlloc(textSizeOut + 1);     // call memory allocation function
-//    pTextOut = NULL;           // for testing
-	if (pTextOut == NULL)
-	{
-		fpErrorHandler(110, (char*)"Allocation failure on output.");
-		return NULL;
-	}
-
-	strcpy(pTextOut, out.str().c_str());
-
-	return pTextOut;
-}
-
-extern "C" EXPORT const char* STDCALL AStyleGetVersion (void)
-{
-	return _version;
-}
-
-#else
 // **************************   main function   ***************************************************
 
 int main(int argc, char *argv[])
@@ -2044,5 +1812,3 @@ int main(int argc, char *argv[])
 
 	return EXIT_SUCCESS;
 }
-
-#endif
