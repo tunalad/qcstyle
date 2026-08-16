@@ -27,30 +27,12 @@
 #ifndef ASTYLE_H
 #define ASTYLE_H
 
-#ifdef __VMS
-#define __USE_STD_IOSTREAM 1
-#include <assert>
-#else
 #include <cassert>
-#endif
 
 #include <string.h>
 #include <string>
 #include <vector>
 #include <cctype>
-
-#ifdef _MSC_VER
-#pragma warning(disable: 4996)  // secure version deprecation warnings for .NET 2005
-#pragma warning(disable: 4267)  // 64 bit signed/unsigned loss of data
-#endif
-
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:  383)  // value copied to temporary, reference to temporary used
-#pragma warning(disable:  444)  // destructor for base class is not virtual
-#pragma warning(disable:  981)  // operands are evaluated in unspecified order
-// #pragma warning(disable: 1418)  // external function with no prior declaration
-// #pragma warning(disable: 1419)  // external declaration in primary source file
-#endif
 
 using namespace std;
 
@@ -59,9 +41,6 @@ namespace astyle
 
 enum FileType      { C_TYPE=0 };
 
-/* The enums below are not recognized by 'vectors' in Microsoft Visual C++
-   V5 when they are part of a namespace!!!  Use Visual C++ V6 or higher.
-*/
 enum FormatStyle   { STYLE_NONE,
                      STYLE_ALLMAN,
                      STYLE_KandR,
@@ -362,15 +341,7 @@ class ASEnhancer : protected ASBase
 		switchVariables sw;                      // switch variables struct
 		vector<switchVariables>  swVector;       // stack vector of switch variables
 
-		// event table variables
-		bool nextLineIsEventTable;              // begin event table is reached
-		bool isInEventTable;                    // need to indent an event table
-
-		// stringstream for trace
-		stringstream *traceOut;
-
 	private:  // functions
-		int  indentLine(string  &line, const int indent) const;
 		int  unindentLine(string  &line, const int unindent) const;
 };
 

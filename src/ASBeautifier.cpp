@@ -27,7 +27,6 @@
 #include "astyle.h"
 
 #include <algorithm>
-#include <iostream>
 
 
 namespace astyle

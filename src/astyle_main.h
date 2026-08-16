@@ -33,16 +33,6 @@
 
 #include "astyle.h"
 
-// for G++ implementation of string.compare:
-#if defined(__GNUC__) && __GNUC__ < 3
-#error - Use GNU C compiler release 3 or higher
-#endif
-
-// for namespace problem in version 5.0
-#if defined(_MSC_VER) && _MSC_VER < 1200        // check for V6.0
-#error - Use Microsoft compiler version 6 or higher
-#endif
-
 //using namespace astyle;
 
 namespace astyle
@@ -107,11 +97,7 @@ class ASConsole
 			origSuffix = ".orig";
 			noBackup = false;
 			// other variables
-#ifdef __VMS
-			tempSuffix = "_tmp";
-#else
 			tempSuffix = ".tmp";
-#endif /* __VMS */
 		}
 		void processFilePath(string &filePath, ASFormatter &formatter);
 		void processOptions(int argc, char *argv[], ASFormatter &formatter);

@@ -43,7 +43,6 @@ namespace astyle
 #define GET_PARAMS(arg,a,b) (isParamOption((arg),(a)) ? GET_PARAM((arg),(a)) : GET_PARAM((arg),(b)))
 
 // console build variables
-int _CRT_glob = 0;               // turn off MinGW automatic file globbing
 ostream* _err = &cerr;           // direct error messages to cerr
 ASConsole g_console;             // class to encapsulate console variables
 

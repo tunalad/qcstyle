@@ -302,9 +302,6 @@ string ASFormatter::nextLine()
 			isCharImmediatelyPostCloseBlock = false;
 		}
 
-//      if (inLineNumber >= 9)
-//          int x = 1;
-
 		if (isInLineComment)
 		{
 			appendCurrentChar();
@@ -973,8 +970,8 @@ string ASFormatter::nextLine()
 			        && nextChar != ']'
 			        && nextChar != '>'
 			        && nextChar != ';'
-			        && !isBeforeComment()
-			        /* && !(isBracketType(bracketTypeStack->back(), ARRAY_TYPE)) */ )
+				&& !isBeforeComment()
+			)
 			{
 				appendCurrentChar();
 				appendSpaceAfter();
@@ -1820,9 +1817,6 @@ void ASFormatter::adjustComments(void)
 		if (formattedLine.find_last_not_of(' ') < len - adjust - 1
 		        && formattedLine[len-1] != '\t')    // don't adjust a tab
 			formattedLine.resize(len - adjust);
-		// the following are commented out to avoid a Borland compiler warning
-		//else
-		//    adjust = 0;
 	}
 }
 
@@ -1972,13 +1966,6 @@ void ASFormatter::padParens(void)
 				         || prevWord ==  "void*"
 				         || (prevWord.length() >= 6     // check end of word for _t
 				             && prevWord.compare(prevWord.length()-2, 2, "_t") == 0)
-				         || prevWord ==  "BOOL"
-				         || prevWord ==  "DWORD"
-				         || prevWord ==  "HWND"
-				         || prevWord ==  "INT"
-				         || prevWord ==  "LPSTR"
-				         || prevWord ==  "VOID"
-				         || prevWord ==  "LPVOID"
 				        )
 				{
 					prevIsParenHeader = true;
@@ -2239,7 +2226,6 @@ void ASFormatter::formatBrackets(BracketType bracketType)
 		else
 		{
 			if (!isCharImmediatelyPostComment
-//                  && !bracketFormatMode == NONE_MODE
 			        && !isImmediatelyPostEmptyBlock)
 				isInLineBreak = false;
 
