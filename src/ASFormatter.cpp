@@ -27,53 +27,6 @@
 #include "astyle.h"
 
 #include <algorithm>
-#include <fstream>
-#include <iostream>
-
-// can trace only if NDEBUG is not defined
-#ifndef NDEBUG
-// #define TRACEunpad
-// #define TRACEcomment
-// #define TRACEheader
-// #define TRACEbracket
-// #define TRACEarray
-#if defined(TRACEunpad) || defined(TRACEcomment) || defined(TRACEheader) \
-    || defined(TRACEbracket) || defined(TRACEarray)
-ofstream *traceOutF;
-#define TRACEF
-#endif
-#endif
-
-#ifdef TRACEunpad
-#define TRunpad(a,b,c)  if(b > 0 || c > 0) *traceOutF << traceLineNumber << " " << b << a << c << endl
-#else
-#define TRunpad(a,b,c)  ((void)0)
-#endif
-
-#ifdef TRACEcomment
-#define TRcomment(a)    *traceOutF << traceLineNumber << " " << a << endl
-#else
-#define TRcomment(a)    ((void)0)
-#endif
-
-#ifdef TRACEheader
-#define TRxtra(a)       *traceOutF << traceLineNumber << " " << a << endl
-#else
-#define TRxtra(a)    ((void)0)
-#endif
-
-#ifdef TRACEbracket
-#define TRbracket(a)       *traceOutF << traceLineNumber << " " << a << endl
-#else
-#define TRbracket(a)    ((void)0)
-#endif
-
-#ifdef TRACEarray
-#define TRarray(a)      *traceOutF << traceLineNumber << " " << a << endl
-#else
-#define TRarray(a)      ((void)0)
-#endif
-
 
 namespace astyle
 {
@@ -109,25 +62,6 @@ ASFormatter::ASFormatter()
 	shouldBreakClosingHeaderBrackets = false;
 	shouldDeleteEmptyLines = false;
 	shouldBreakElseIfs = false;
-#ifdef TRACEF
-	// create a trace text file
-	string traceFileName = "tracef.txt";
-	char* env = getenv("HOME");
-	if (env != NULL)
-		traceFileName = string(env) + string("/tracef.txt");
-	else
-	{
-		env = getenv("USERPROFILE");
-		if (env != NULL)
-			traceFileName = string(env) + string("\\My Documents\\tracef.txt");
-		else
-		{
-			cout << "\nCould not open tracef.txt\n" << endl;
-			exit(1);
-		}
-	}
-	traceOutF = new ofstream(traceFileName.c_str());
-#endif
 }
 
 /**
@@ -140,10 +74,6 @@ ASFormatter::~ASFormatter()
 	deleteContainer(bracketTypeStack);
 
 	delete enhancer;
-
-#ifdef TRACEF
-	delete traceOutF;
-#endif
 }
 
 /**
@@ -284,7 +214,6 @@ void ASFormatter::init(ASSourceIterator *si)
 	preprocBracketTypeStackSize = 0;
 	spacePadNum = 0;
 	previousReadyFormattedLineLength = string::npos;
-	traceLineNumber = 0;
 	previousBracketType = NULL_TYPE;
 	previousOperator = NULL;
 
@@ -334,12 +263,6 @@ void ASFormatter::init(ASSourceIterator *si)
 	isImmediatelyPostHeader = false;
 	isInHeader = false;
 	isInCase = false;
-#ifdef TRACEF
-	if (traceFileName.empty())
-		*traceOutF << "new file" << endl;
-	else
-		*traceOutF << traceFileName << endl;
-#endif
 }
 
 /**
@@ -357,7 +280,6 @@ string ASFormatter::nextLine()
 	isCharImmediatelyPostLineComment = false;
 	isCharImmediatelyPostOpenBlock = false;
 	isCharImmediatelyPostCloseBlock = false;
-	traceLineNumber++;
 
 	while (!isLineReady)
 	{
@@ -973,10 +895,10 @@ string ASFormatter::nextLine()
 				isInCase = false;
 				passedColon = true;
 			}
-			else if (isCStyle()                     // for C/C++ only
+			else if (isCStyle()                     // for C only
 			         && !foundQuestionMark          // not in a ... ? ... : ... sequence
-			         && !foundPreDefinitionHeader   // not in a definition block (e.g. class foo : public bar
-			         && previousCommandChar != ')'  // not immediately after closing paren of a method header, e.g. ASFormatter::ASFormatter(...) : ASBeautifier(...)
+			         && !foundPreDefinitionHeader   // not in a definition block (e.g. a struct definition
+			         && previousCommandChar != ')'  // not immediately after closing paren of a function header
 			         && previousChar != ':'         // not part of '::'
 			         && peekNextChar() != ':'       // not part of '::'
 			         && !isdigit(peekNextChar()))   // not a bit field
@@ -1149,7 +1071,7 @@ void ASFormatter::setBracketFormatMode(BracketMode mode)
 /**
  * set closing header bracket breaking mode
  * options:
- *    true     brackets just before closing headers (e.g. 'else', 'catch')
+ *    true     brackets just before closing headers (e.g. 'else')
  *             will be broken, even if standard brackets are attached.
  *    false    closing header brackets will be treated as standard brackets.
  *
@@ -1267,7 +1189,7 @@ void ASFormatter::setBreakBlocksMode(bool state)
 }
 
 /**
- * set option to break closing header blocks of code (such as 'else', 'catch', ...) with empty lines.
+ * set option to break closing header blocks of code (such as 'else', ...) with empty lines.
  *
  * @param state        true = convert, false = don't convert.
  */
@@ -1587,8 +1509,8 @@ void ASFormatter::breakLine()
 /**
  * check if the currently reached open-bracket (i.e. '{')
  * opens a:
- * - a definition type block (such as a class or namespace),
- * - a command block (such as a method block)
+ * - a definition type block (such as a struct or union),
+ * - a command block (such as a function block)
  * - a static array
  * this method takes for granted that the current character
  * is an opening bracket.
@@ -1622,8 +1544,6 @@ BracketType ASFormatter::getBracketType()
 
 	if (isOneLineBlockReached())
 		returnVal = (BracketType)(returnVal | SINGLE_LINE_TYPE);
-
-	TRbracket(returnVal);
 
 	return returnVal;
 }
@@ -1892,9 +1812,6 @@ void ASFormatter::adjustComments(void)
 		int adjust = -spacePadNum;          // make the number positive
 		if (formattedLine[len-1] != '\t')   // don't adjust if a tab
 			formattedLine.append(adjust, ' ');
-//      else                                // comment out to avoid compiler warning
-//          adjust = 0;
-//      TRcomment(adjust);                  // trace macro
 	}
 	// if spaces were added, need to delete spaces before the comment, if possible
 	else if (spacePadNum > 0)
@@ -1906,7 +1823,6 @@ void ASFormatter::adjustComments(void)
 		// the following are commented out to avoid a Borland compiler warning
 		//else
 		//    adjust = 0;
-		TRcomment(-adjust);                 // trace macro
 	}
 }
 
@@ -2043,13 +1959,11 @@ void ASFormatter::padParens(void)
 				if (prevWordH != NULL)
 				{
 					prevIsParenHeader = true;
-					TRxtra(*prevWordH);         // trace macro
 				}
 				else if (prevWord == "return"   // don't unpad return statements
 				         || prevWord == "*")    // don't unpad multiply or pointer
 				{
 					prevIsParenHeader = true;
-					TRxtra(prevWord);           // trace macro
 				}
 				// don't unpad variables
 				else if (prevWord == "bool"
@@ -2068,7 +1982,6 @@ void ASFormatter::padParens(void)
 				        )
 				{
 					prevIsParenHeader = true;
-					TRxtra(prevWord);           // trace macro
 				}
 			}
 			// do not unpad operators, but leave them if already padded
@@ -2131,8 +2044,6 @@ void ASFormatter::padParens(void)
 		if (shouldPadParensInside)
 			if (!(currentChar == '(' && peekedCharInside == ')'))
 				appendSpaceAfter();
-
-		TRunpad('(', spacesOutsideToDelete, spacesInsideToDelete);       // trace macro
 	}
 	else if (currentChar == ')' /*|| currentChar == ']'*/)
 	{
@@ -2187,8 +2098,6 @@ void ASFormatter::padParens(void)
 			        && peekedCharOutside != '.'
 			        && peekedCharOutside != '-')    // check for ->
 				appendSpaceAfter();
-
-		TRunpad(')', spacesInsideToDelete, 0 /*spacesOutsideToDelete*/);       // trace macro
 	}
 	return;
 }
@@ -2440,10 +2349,6 @@ void ASFormatter::formatArrayBrackets(BracketType bracketType, bool isOpeningArr
 		        || isBeforeLineEndComment(charNum)
 		        || nextChar == '{')
 			isNonInStatementArray = true;
-		if (isNonInStatementArray)
-			TRarray('x');
-		else
-			TRarray(' ');
 
 	}
 	else if (currentChar == '}')

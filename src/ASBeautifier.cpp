@@ -311,7 +311,7 @@ void ASBeautifier::init()
 }
 
 /**
- * set indentation style to C/C++.
+ * set indentation style to C.
  */
 void ASBeautifier::setCStyle()
 {
@@ -1183,7 +1183,7 @@ string ASBeautifier::beautify(const string &originalLine)
 						}
 					}
 				}
-				// check if 'catch' closes a previous 'try' or 'catch'
+				// check if a 'case' statement has been reached
 				else if (newHeader == &AS_CASE)
 				{
 					isInCase = true;
@@ -1246,7 +1246,7 @@ string ASBeautifier::beautify(const string &originalLine)
 
 			else if (isCStyle() && isInClassHeader)
 			{
-				// found a 'class A : public B' definition
+				// found a 'struct XXX : ...' definition (bit fields, etc.)
 				// so do nothing special
 			}
 
@@ -1394,7 +1394,7 @@ string ASBeautifier::beautify(const string &originalLine)
 
 		if (isPotentialHeader)
 		{
-			// check for preBlockStatements in C/C++ ONLY if not within parenthesies
+			// check for preBlockStatements in C ONLY if not within parenthesies
 			// (otherwise 'struct XXX' statements would be wrongly interpreted...)
 			if (!(isCStyle() && parenDepth > 0))
 			{

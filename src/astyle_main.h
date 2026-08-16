@@ -33,14 +33,6 @@
 
 #include "astyle.h"
 
-#if defined(_MSC_VER) || defined(__DMC__)
-#include <sys/utime.h>
-#include <sys/stat.h>
-#else
-#include <utime.h>
-#include <sys/stat.h>
-#endif                         // end compiler checks
-
 // for G++ implementation of string.compare:
 #if defined(__GNUC__) && __GNUC__ < 3
 #error - Use GNU C compiler release 3 or higher
@@ -101,71 +93,35 @@ class ASConsole
 {
 	public:
 		// command line options
-		bool isRecursive;                   // recursive option
 		string origSuffix;                  // suffix= option
 		bool noBackup;                      // suffix=none option
-		bool preserveDate;                  // preserve-date option
-		bool isVerbose;                     // verbose option
-		bool isQuiet;                       // quiet option
-		bool isFormattedOnly;               // formatted lines only option
-		bool optionsFileRequired;           // options= option
 		// other variables
-		bool hasWildcard;                   // file name includes a wildcard
-		size_t mainDirectoryLength;         // directory length to be excluded in displays
 		string tempSuffix;                  // temporary file suffix
-		int  filesFormatted;                // number of files formatted
-		int  filesUnchanged;                // number of files unchanged
-		int  linesOut;                      // number of output lines
 
-		vector<string> excludeVector;       // exclude from wildcard hits
-		vector<bool>   excludeHitsVector;   // exclude flags for eror reporting
 		vector<string> fileNameVector;      // file paths and names from the command line
 		vector<string> optionsVector;       // options from the command line
-		vector<string> fileOptionsVector;   // options from the options vector
-		string         optionsFileName;     // file path and name of the options file to use
 
 	public:
 		ASConsole() {
 			// command line options
-			isRecursive = false;
 			origSuffix = ".orig";
 			noBackup = false;
-			preserveDate = false;
-			isVerbose = false;
-			isQuiet = false;
-			isFormattedOnly = false;
-			optionsFileRequired = false;
 			// other variables
-			hasWildcard = false;
-			mainDirectoryLength = 0;
 #ifdef __VMS
 			tempSuffix = "_tmp";
 #else
 			tempSuffix = ".tmp";
 #endif /* __VMS */
-			optionsFileName = "";
-			filesFormatted = 0;
-			filesUnchanged = 0;
-			linesOut = 0;
 		}
 		void processFilePath(string &filePath, ASFormatter &formatter);
 		void processOptions(int argc, char *argv[], ASFormatter &formatter);
-		void standardizePath(string &path, bool removeBeginningSeparator=false) const;
 
 	private:
 		void error(const char *why, const char* what) const;
 		bool formatFile(const string &fileName, astyle::ASFormatter &formatter) const;
-		string getCurrentDirectory(const string &fileName) const;
-		void getFileNames(const string &directory, const string &wildcard, vector<string> &fileName);
-		bool isPathExclued(const string &subPath);
-		void preserveFileDate(const char *oldFileName, const char *newFileName) const;
 		void printHelp() const;
 		void removeFile(const char* fileName, const char* errMsg) const;
 		void renameFile(const char* oldFileName, const char* newFileName, const char* errMsg) const;
-		bool stringEndsWith(const string &str, const string &suffix) const;
-		void wait(int seconds) const;
-		int  waitForRemove(const char* oldFileName) const;
-		int  wildcmp(const char *wild, const char *data) const;
 };
 
 
@@ -174,7 +130,6 @@ class ASConsole
 // used by both console and library builds
 //----------------------------------------------------------------------------
 
-void importOptions(istream &in, vector<string> &optionsVector);
 void isOptionError(const string &arg, const string &errorInfo);
 bool isParamOption(const string &arg, const char *option);
 bool isParamOption(const string &arg, const char *option1, const char *option2);

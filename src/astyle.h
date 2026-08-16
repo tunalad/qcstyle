@@ -397,7 +397,6 @@ class ASFormatter : public ASBeautifier
 		void setBreakClosingHeaderBlocksMode(bool state);
 		void setBreakElseIfsMode(bool state);
 		void setDeleteEmptyLinesMode(bool state);
-		string traceFileName;
 
 	private:  // functions
 		void ASformatter(ASFormatter &copy);           // not to be imlpemented
@@ -467,7 +466,6 @@ class ASFormatter : public ASBeautifier
 		int  preprocBracketTypeStackSize;
 		int  tabIncrementIn;
 		int  spacePadNum;
-		int  traceLineNumber;
 		size_t formattedLineCommentNum;     // comment location on formattedLine
 		size_t previousReadyFormattedLineLength;
 		FormatStyle formattingStyle;
