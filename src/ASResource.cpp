@@ -147,10 +147,6 @@ void ASResource::buildHeaders(vector<const string *> &headers,
     headers.push_back(&AS_DO);
     headers.push_back(&AS_SWITCH);
 
-    headers.push_back(&AS_ENTITY);
-    headers.push_back(&AS_VECTOR);
-    headers.push_back(&AS_STRING);
-
     if (beautifier) {
         headers.push_back(&AS_CASE);
         headers.push_back(&AS_DEFAULT);

@@ -221,6 +221,7 @@ void ASFormatter::init(ASSourceIterator *si) {
     isNonParenHeader = true;
     foundPreDefinitionHeader = false;
     foundPreCommandHeader = false;
+    foundParenBeforeEqual = false;
     foundQuestionMark = false;
     isInLineBreak = false;
     endOfCodeReached = false;
@@ -531,6 +532,8 @@ string ASFormatter::nextLine() {
                 isInHeader = false;
                 isImmediatelyPostHeader = true;
             }
+            if (parenStack->back() == 0)
+                foundParenBeforeEqual = true;
             if (currentChar == ']')
                 isInBlParen = false;
         }
@@ -541,6 +544,7 @@ string ASFormatter::nextLine() {
                 BracketType newBracketType = getBracketType();
                 foundPreDefinitionHeader = false;
                 foundPreCommandHeader = false;
+                foundParenBeforeEqual = false;
                 isInPotentialCalculation = false;
                 needHeaderOpeningBracket = false;
 
@@ -1384,7 +1388,9 @@ BracketType ASFormatter::getBracketType() {
 
     BracketType returnVal;
 
-    if (previousNonWSChar == '=')
+    if (previousNonWSChar == '=' && foundParenBeforeEqual)
+        returnVal = COMMAND_TYPE;
+    else if (previousNonWSChar == '=')
         returnVal = ARRAY_TYPE;
     else if (foundPreDefinitionHeader) {
         returnVal = DEFINITION_TYPE;

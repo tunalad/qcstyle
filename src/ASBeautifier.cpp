@@ -174,6 +174,7 @@ ASBeautifier::ASBeautifier(const ASBeautifier &other) : ASBase(other) {
     blockCommentNoIndent = other.blockCommentNoIndent;
     blockCommentNoBeautify = other.blockCommentNoBeautify;
     previousLineProbationTab = other.previousLineProbationTab;
+    foundParenBeforeEqual = other.foundParenBeforeEqual;
     minConditionalIndent = other.minConditionalIndent;
     parenDepth = other.parenDepth;
     indentLength = other.indentLength;
@@ -279,6 +280,7 @@ void ASBeautifier::init() {
     blockCommentNoIndent = false;
     blockCommentNoBeautify = false;
     previousLineProbationTab = false;
+    foundParenBeforeEqual = false;
     isNonInStatementArray = false;
 }
 
@@ -829,6 +831,7 @@ string ASBeautifier::beautify(const string &originalLine) {
                     headerStack->back() == &AS_STRUCT) {
                     headerStack->pop_back();
                     isInClassHeader = false;
+                    foundParenBeforeEqual = false;
                 }
 
                 if (parenDepth == 0) {
@@ -857,6 +860,7 @@ string ASBeautifier::beautify(const string &originalLine) {
                     }
                     ch = ' ';
                     isInConditional = false;
+                    foundParenBeforeEqual = true;
                 }
 
                 if (!inStatementIndentStackSizeStack->empty()) {
@@ -887,6 +891,7 @@ string ASBeautifier::beautify(const string &originalLine) {
                  prevNonSpaceCh == '}' || prevNonSpaceCh == ')' ||
                  prevNonSpaceCh == ';' || peekNextChar(line, i) == '{' ||
                  isNonInStatementArray || isInClassHeader ||
+                 (prevNonSpaceCh == '=' && foundParenBeforeEqual) ||
                  (isInDefine &&
                   (prevNonSpaceCh == '(' || isLegalNameChar(prevNonSpaceCh))));
 
@@ -957,6 +962,10 @@ string ASBeautifier::beautify(const string &originalLine) {
                 // goto default; is NOT a header
                 else if (newHeader == &AS_DEFAULT &&
                          (peekChar == ';' || peekChar == '(')) {
+                    newHeader = NULL;
+                }
+                // type keywords inside parameter lists are not headers
+                else if (parenDepth > 0) {
                     newHeader = NULL;
                 }
             }
@@ -1079,8 +1088,8 @@ string ASBeautifier::beautify(const string &originalLine) {
                                          // appear as block-openers
                 if (isInCase) {
                     isInCase = false;
-                    ch = ';';          // from here on, treat char as ';'
-                } else // is in a label (e.g. 'label1:')
+                    ch = ';'; // from here on, treat char as ';'
+                } else        // is in a label (e.g. 'label1:')
                 {
                     if (labelIndent)
                         --tabCount; // unindent label by one indent
@@ -1357,7 +1366,7 @@ string ASBeautifier::preLineWS(int spaceTabCount, int tabCount) {
         ws += indentString;
 
     while ((spaceTabCount--) > 0)
-                ws += ' ';
+        ws += ' ';
 
     return ws;
 }

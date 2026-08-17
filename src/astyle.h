@@ -278,6 +278,11 @@ class ASBeautifier : protected ASResource, protected ASBase {
     bool blockCommentNoIndent;
     bool blockCommentNoBeautify;
     bool previousLineProbationTab;
+
+  protected:
+    bool foundParenBeforeEqual;
+
+  private: // variables
     int minConditionalIndent;
     int parenDepth;
     int indentLength;
