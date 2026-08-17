@@ -49,6 +49,7 @@ void printHelp(std::ostream &out) {
     out << "      banner, -A5                           Attached, indented braces." << endl;
     out << "      gnu, -A6                              Broken braces, indented blocks (2 spaces)." << endl;
     out << "      linux, -A7                            Linux braces (8 spaces)." << endl;
+    out << "      quakec, -A8                           QuakeC style (Allman, 4 spaces)." << endl;
     out << endl;
     out << "    --brackets=<string>                  Set the brace attachment." << endl;
     out << "      break, -b                             Break braces (ANSI C style)." << endl;
