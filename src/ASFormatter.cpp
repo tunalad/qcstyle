@@ -161,6 +161,7 @@ void ASFormatter::fixOptionVariableConflicts() {
         setBlockIndent(false);
         setBracketIndent(false);
         setSpaceIndentation(4);
+        setTabSpaceConversionMode(true);
         setOperatorPaddingMode(true);
         setParensUnPaddingMode(true);
         break;
@@ -531,8 +532,12 @@ string ASFormatter::nextLine() {
         // handle parentheses
         if (currentChar == '(' || currentChar == '[') {
             parenStack->back()++;
-            if (currentChar == '[')
+            if (currentChar == '[') {
                 isInBlParen = true;
+                if (shouldPadOperators && !formattedLine.empty() &&
+                    formattedLine.back() == '=')
+                    appendSpacePad();
+            }
         } else if (currentChar == ')' || currentChar == ']') {
             parenStack->back()--;
 
