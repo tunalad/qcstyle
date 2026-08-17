@@ -891,7 +891,7 @@ string ASBeautifier::beautify(const string &originalLine) {
                  prevNonSpaceCh == '}' || prevNonSpaceCh == ')' ||
                  prevNonSpaceCh == ';' || peekNextChar(line, i) == '{' ||
                  isNonInStatementArray || isInClassHeader ||
-                 foundParenBeforeEqual ||
+                 foundParenBeforeEqual || prevNonSpaceCh == '=' ||
                  (isInDefine &&
                   (prevNonSpaceCh == '(' || isLegalNameChar(prevNonSpaceCh))));
 
