@@ -553,8 +553,8 @@ string ASBeautifier::beautify(const string &originalLine) {
 
     // handle preprocessor commands
 
-    if (!isInComment && (line[0] == '#' || backslashEndsPrevLine)) {
-        if (line[0] == '#') {
+    if (!isInComment && (line[0] == '#' || line[0] == '$' || backslashEndsPrevLine)) {
+        if (line[0] == '#' || line[0] == '$') {
             string preproc = trim(string(line.c_str() + 1));
 
             // When finding a multi-lined #define statement, the original
@@ -962,10 +962,6 @@ string ASBeautifier::beautify(const string &originalLine) {
                 // goto default; is NOT a header
                 else if (newHeader == &AS_DEFAULT &&
                          (peekChar == ';' || peekChar == '(')) {
-                    newHeader = NULL;
-                }
-                // type keywords inside parameter lists are not headers
-                else if (parenDepth > 0) {
                     newHeader = NULL;
                 }
             }

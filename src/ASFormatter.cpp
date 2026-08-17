@@ -427,9 +427,10 @@ string ASFormatter::nextLine() {
         // check if in preprocessor
         // ** isInPreprocessor will be automatically reset at the begining
         //    of a new line in getnextChar()
-        if (currentChar == '#') {
+        if (currentChar == '#' || currentChar == '$') {
             isInPreprocessor = true;
-            processPreprocessor();
+            if (currentChar == '#')
+                processPreprocessor();
             //  need to fall thru here to reset the variables
         }
 
