@@ -3,7 +3,7 @@
 
 include config.mk
 
-SRC = src/ASBeautifier.cpp src/ASEnhancer.cpp src/ASFormatter.cpp src/ASResource.cpp src/astyle_main.cpp
+SRC = src/ASBeautifier.cpp src/ASEnhancer.cpp src/ASFormatter.cpp src/ASResource.cpp src/ASHelp.cpp src/astyle_main.cpp
 OBJ = ${SRC:.cpp=.o}
 TARGET = qcstyle
 

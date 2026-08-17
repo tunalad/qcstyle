@@ -1,5 +1,5 @@
 # qcstyle version
-VERSION = 1.23
+VERSION = 1.0
 
 # customize below to fit your system
 
@@ -10,5 +10,5 @@ PREFIX = ${HOME}/.local
 
 # compiler and linker
 CXX = g++
-CXXFLAGS = -std=c++14 -Os -Wall -Wextra
+CXXFLAGS = -std=c++14 -Os -Wall -Wextra -DVERSION=\"${VERSION}\"
 LDFLAGS = -s

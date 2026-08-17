@@ -103,7 +103,6 @@ class ASConsole {
     void error(const char *why, const char *what) const;
     bool formatFile(const string &fileName,
                     astyle::ASFormatter &formatter) const;
-    void printHelp() const;
     void removeFile(const char *fileName, const char *errMsg) const;
     void renameFile(const char *oldFileName, const char *newFileName,
                     const char *errMsg) const;

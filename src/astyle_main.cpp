@@ -25,6 +25,7 @@
  */
 
 #include "astyle_main.h"
+#include "ASHelp.h"
 
 #include <cstdlib>
 #include <errno.h>
@@ -44,7 +45,11 @@ namespace astyle {
 ostream *_err = &cerr; // direct error messages to cerr
 ASConsole g_console;   // class to encapsulate console variables
 
-const char *_version = "1.23";
+#ifndef VERSION
+#define VERSION "1.23"
+#endif
+
+const char *_version = VERSION;
 
 /**
  * parse the options vector
@@ -486,217 +491,7 @@ bool ASConsole::formatFile(const string &fileName,
     return isFormatted;
 }
 
-void ASConsole::printHelp() const {
-    (*_err) << endl;
-    (*_err) << "                           Quaketastic Style " << _version
-            << endl;
-    (*_err) << "                         Maintained by: Jim Pattee\n";
-    (*_err) << "                       Original Author: Tal Davidson\n";
-    (*_err) << endl;
-    (*_err) << "Usage  :  qcstyle [options] Source1.qc Source2.qc  [...]\n";
-    (*_err) << "          qcstyle [options] < Original > Beautified\n";
-    (*_err) << endl;
-    (*_err) << "When indenting a specific file, the resulting indented file "
-               "RETAINS the\n";
-    (*_err) << "original file-name. The original pre-indented file is renamed, "
-               "with a\n";
-    (*_err) << "suffix of \".orig\" added to the original filename.\n";
-    (*_err) << endl;
-    (*_err)
-        << "By default, qcstyle is set up to indent source files, with 4 spaces\n";
-    (*_err) << "per indent, a maximal indentation of 40 spaces inside "
-               "continuous statements,\n";
-    (*_err) << "and NO formatting.\n";
-    (*_err) << endl;
-    (*_err) << "Options Format:\n";
-    (*_err) << "----------------\n";
-    (*_err) << "    Long options (starting with '--') must be written one at a "
-               "time.\n";
-    (*_err)
-        << "    Short options (starting with '-') may be appended together.\n";
-    (*_err) << "    Thus, -bps4 is the same as -b -p -s4.\n";
-    (*_err) << endl;
-    (*_err) << "Predefined Style Options:\n";
-    (*_err) << "-------------------------\n";
-    (*_err) << "    --style=allman  OR  --style=bsd  OR  -A1\n";
-    (*_err) << "    Allman style formatting/indenting.\n";
-    (*_err) << "    Broken brackets.\n";
-    (*_err) << endl;
-    (*_err) << "    --style=k&r  OR  --style=k/r  OR  -A2\n";
-    (*_err) << "    Kernighan & Ritchie style formatting/indenting.\n";
-    (*_err) << "    Linux brackets.\n";
-    (*_err) << endl;
-    (*_err) << "    --style=stroustrup  OR  -A3\n";
-    (*_err) << "    Stroustrup style formatting/indenting.\n";
-    (*_err) << "    Stroustrup brackets.\n";
-    (*_err) << endl;
-    (*_err) << "    --style=whitesmith  OR  -A4\n";
-    (*_err) << "    Whitesmith style formatting/indenting.\n";
-    (*_err) << "    Broken, indented brackets.\n";
-    (*_err) << "    Indented switch blocks.\n";
-    (*_err) << endl;
-    (*_err) << "    --style=banner  OR  -A5\n";
-    (*_err) << "    Banner style formatting/indenting.\n";
-    (*_err) << "    Attached, indented brackets.\n";
-    (*_err) << "    Indented switch blocks.\n";
-    (*_err) << endl;
-    (*_err) << "    --style=gnu  OR  -A6\n";
-    (*_err) << "    GNU style formatting/indenting.\n";
-    (*_err) << "    Broken brackets, indented blocks, indent is 2 spaces.\n";
-    (*_err) << endl;
-    (*_err) << "    --style=linux  OR  -A7\n";
-    (*_err) << "    Linux style formatting/indenting.\n";
-    (*_err) << "    Linux brackets, indent is 8 spaces.\n";
-    (*_err) << endl;
-    (*_err) << "Tab and Bracket Options:\n";
-    (*_err) << "------------------------\n";
-    (*_err) << "    default indent option\n";
-    (*_err) << "    If no indentation option is set,\n";
-    (*_err) << "    the default option of 4 spaces will be used.\n";
-    (*_err) << endl;
-    (*_err) << "    --indent=spaces=#  OR  -s#\n";
-    (*_err) << "    Indent using # spaces per indent. Not specifying #\n";
-    (*_err) << "    will result in a default of 4 spaces per indent.\n";
-    (*_err) << endl;
-    (*_err) << "    --indent=tab  OR  --indent=tab=#  OR  -t  OR  -t#\n";
-    (*_err) << "    Indent using tab characters, assuming that each\n";
-    (*_err) << "    tab is # spaces long. Not specifying # will result\n";
-    (*_err) << "    in a default assumption of 4 spaces per tab.\n";
-    (*_err) << endl;
-    (*_err) << "    --indent=force-tab=#  OR  -T#\n";
-    (*_err) << "    Indent using tab characters, assuming that each\n";
-    (*_err) << "    tab is # spaces long. Force tabs to be used in areas\n";
-    (*_err) << "    qcstyle would prefer to use spaces.\n";
-    (*_err) << endl;
-    (*_err) << "    default brackets option\n";
-    (*_err) << "    If no brackets option is set,\n";
-    (*_err) << "    the brackets will not be changed.\n";
-    (*_err) << endl;
-    (*_err) << "    --brackets=break  OR  -b\n";
-    (*_err) << "    Break brackets from pre-block code (i.e. ANSI C style).\n";
-    (*_err) << endl;
-    (*_err) << "    --brackets=attach  OR  -a\n";
-    (*_err) << "    Attach brackets to pre-block code (i.e. K&R style).\n";
-    (*_err) << endl;
-    (*_err) << "    --brackets=linux  OR  -l\n";
-    (*_err) << "    Break definition-block brackets and attach command-block\n";
-    (*_err) << "    brackets.\n";
-    (*_err) << endl;
-    (*_err) << "    --brackets=stroustrup  OR  -u\n";
-    (*_err) << "    Attach all brackets except function definition brackets.\n";
-    (*_err) << endl;
-    (*_err) << "Indentation options:\n";
-    (*_err) << "--------------------\n";
-    (*_err) << "    --indent-switches  OR  -S\n";
-    (*_err) << "    Indent 'switch' blocks, so that the inner 'case XXX:'\n";
-    (*_err) << "    headers are indented in relation to the switch block.\n";
-    (*_err) << endl;
-    (*_err) << "    --indent-cases  OR  -K\n";
-    (*_err) << "    Indent case blocks from the 'case XXX:' headers.\n";
-    (*_err) << "    Case statements not enclosed in blocks are NOT indented.\n";
-    (*_err) << endl;
-    (*_err) << "    --indent-blocks  OR  -G\n";
-    (*_err)
-        << "    Add extra indentation entire blocks (including brackets).\n";
-    (*_err) << endl;
-    (*_err) << "    --indent-brackets  OR  -B\n";
-    (*_err) << "    Add extra indentation to '{' and '}' block brackets.\n";
-    (*_err) << endl;
-    (*_err) << "    --indent-labels  OR  -L\n";
-    (*_err) << "    Indent labels so that they appear one indent less than\n";
-    (*_err) << "    the current indentation level, rather than being\n";
-    (*_err) << "    flushed completely to the left (which is the default).\n";
-    (*_err) << endl;
-    (*_err) << "    --indent-preprocessor  OR  -w\n";
-    (*_err) << "    Indent multi-line #define statements.\n";
-    (*_err) << endl;
-    (*_err) << "    --max-instatement-indent=#  OR  -M#\n";
-    (*_err) << "    Indent a maximal # spaces in a continuous statement,\n";
-    (*_err) << "    relative to the previous line.\n";
-    (*_err) << endl;
-    (*_err) << "    --min-conditional-indent=#  OR  -m#\n";
-    (*_err) << "    Indent a minimal # spaces in a continuous conditional\n";
-    (*_err) << "    belonging to a conditional header.\n";
-    (*_err) << endl;
-    (*_err) << "Formatting options:\n";
-    (*_err) << "-------------------\n";
-    (*_err) << "    --break-blocks  OR  -f\n";
-    (*_err) << "    Insert empty lines around unrelated blocks, labels, ...\n";
-    (*_err) << endl;
-    (*_err) << "    --break-blocks=all  OR  -F\n";
-    (*_err) << "    Like --break-blocks, except also insert empty lines \n";
-    (*_err) << "    around closing headers (e.g. 'else', ...).\n";
-    (*_err) << endl;
-    (*_err) << "    --break-closing-brackets  OR  -y\n";
-    (*_err)
-        << "    Break brackets before closing headers (e.g. 'else', ...).\n";
-    (*_err) << "    Use with --brackets=attach, --brackets=linux, \n";
-    (*_err) << "    or --brackets=stroustrup.\n";
-    (*_err) << endl;
-    (*_err) << "    --break-elseifs  OR  -e\n";
-    (*_err) << "    Break 'else if()' statements into two different lines.\n";
-    (*_err) << endl;
-    (*_err) << "    --delete-empty-lines  OR  -x\n";
-    (*_err) << "    Delete empty lines within a function.\n";
-    (*_err)
-        << "    It will NOT delete lines added by the break-blocks options.\n";
-    (*_err) << endl;
-    (*_err) << "    --pad-oper  OR  -p\n";
-    (*_err) << "    Insert space paddings around operators.\n";
-    (*_err) << endl;
-    (*_err) << "    --pad-paren  OR  -P\n";
-    (*_err)
-        << "    Insert space padding around parenthesis on both the outside\n";
-    (*_err) << "    and the inside.\n";
-    (*_err) << endl;
-    (*_err) << "    --pad-paren-out  OR  -d\n";
-    (*_err)
-        << "    Insert space padding around parenthesis on the outside only.\n";
-    (*_err) << endl;
-    (*_err) << "    --pad-paren-in  OR  -D\n";
-    (*_err)
-        << "    Insert space padding around parenthesis on the inside only.\n";
-    (*_err) << endl;
-    (*_err) << "    --unpad-paren  OR  -U\n";
-    (*_err)
-        << "    Remove unnecessary space padding around parenthesis.  This\n";
-    (*_err) << "    can be used in combination with the 'pad' options above.\n";
-    (*_err) << endl;
-    (*_err) << "    --keep-one-line-statements  OR  -o\n";
-    (*_err) << "    Don't break lines containing multiple statements into\n";
-    (*_err) << "    multiple single-statement lines.\n";
-    (*_err) << endl;
-    (*_err) << "    --keep-one-line-blocks  OR  -O\n";
-    (*_err) << "    Don't break blocks residing completely on one line.\n";
-    (*_err) << endl;
-    (*_err) << "    --convert-tabs  OR  -c\n";
-    (*_err) << "    Convert tabs to the appropriate number of spaces.\n";
-    (*_err) << endl;
-    (*_err) << "    --fill-empty-lines  OR  -E\n";
-    (*_err) << "    Fill empty lines with the white space of their\n";
-    (*_err) << "    previous lines.\n";
-    (*_err) << endl;
-    (*_err) << "Other options:\n";
-    (*_err) << "--------------\n";
-    (*_err) << "    --suffix=####\n";
-    (*_err) << "    Append the suffix #### instead of '.orig' to original "
-               "filename.\n";
-    (*_err) << endl;
-    (*_err) << "    --suffix=none  OR  -n\n";
-    (*_err) << "    Do not retain a backup of the original file.\n";
-    (*_err) << endl;
-    (*_err) << "    --errors-to-stdout  OR  -X\n";
-    (*_err) << "    Print errors and help information to standard-output "
-               "rather than\n";
-    (*_err) << "    to standard-error.\n";
-    (*_err) << endl;
-    (*_err) << "    --version  OR  -V\n";
-    (*_err) << "    Print version number.\n";
-    (*_err) << endl;
-    (*_err) << "    --help  OR  -h  OR  -?\n";
-    (*_err) << "    Print this help message.\n";
-    (*_err) << endl;
-}
+// printHelp and printHelpFull are in ASHelp.cpp
 
 // process a command-line file path, including wildcards
 void ASConsole::processFilePath(string &filePath, ASFormatter &formatter) {
@@ -724,7 +519,10 @@ void ASConsole::processOptions(int argc, char *argv[], ASFormatter &formatter) {
 
         if (IS_OPTION(arg, "-h") || IS_OPTION(arg, "--help") ||
             IS_OPTION(arg, "-?")) {
-            printHelp();
+            printHelp(*_err);
+            exit(EXIT_SUCCESS);
+        } else if (IS_OPTION(arg, "-H") || IS_OPTION(arg, "--help-full")) {
+            printHelpFull(*_err);
             exit(EXIT_SUCCESS);
         } else if (IS_OPTION(arg, "-V") || IS_OPTION(arg, "--version")) {
             (*_err) << "Quaketastic Style Version " << _version << endl;
