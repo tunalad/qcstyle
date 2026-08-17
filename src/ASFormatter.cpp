@@ -155,6 +155,15 @@ void ASFormatter::fixOptionVariableConflicts() {
         setBracketIndent(false);
         setSpaceIndentation(8);
         break;
+
+    case STYLE_QUAKEC:
+        setBracketFormatMode(BREAK_MODE);
+        setBlockIndent(false);
+        setBracketIndent(false);
+        setSpaceIndentation(4);
+        setOperatorPaddingMode(true);
+        setParensUnPaddingMode(true);
+        break;
     }
     // cannot have both bracketIndent and block Indent
     // default to bracketIndent
@@ -179,8 +188,8 @@ void ASFormatter::init(ASSourceIterator *si) {
     fixOptionVariableConflicts();
 
     ASBeautifier::init(si);
-    enhancer->init(getIndentLength(), getIndentString(),
-                   getCaseIndent(), getEmptyLineFill());
+    enhancer->init(getIndentLength(), getIndentString(), getCaseIndent(),
+                   getEmptyLineFill());
     sourceIterator = si;
 
     initContainer(preBracketHeaderStack, new vector<const string *>);
@@ -190,8 +199,8 @@ void ASFormatter::init(ASSourceIterator *si) {
     bracketTypeStack->push_back(NULL_TYPE);
 
     currentHeader = NULL;
-        currentLine.clear();
-        readyFormattedLine.clear();
+    currentLine.clear();
+    readyFormattedLine.clear();
     formattedLine = "";
     currentChar = ' ';
     previousChar = ' ';
@@ -614,8 +623,7 @@ string ASFormatter::nextLine() {
 
             if (isCharImmediatelyPostOpenBlock ||
                 (isCharImmediatelyPostCloseBlock &&
-                 shouldBreakOneLineStatements &&
-                 isLegalNameChar(currentChar) &&
+                 shouldBreakOneLineStatements && isLegalNameChar(currentChar) &&
                  !isCharImmediatelyPostComment)) {
                 previousCommandChar = ' ';
                 isInLineBreak = true;
@@ -1393,6 +1401,8 @@ BracketType ASFormatter::getBracketType() {
         returnVal = COMMAND_TYPE;
     else if (previousNonWSChar == '=')
         returnVal = ARRAY_TYPE;
+    else if (foundParenBeforeEqual)
+        returnVal = COMMAND_TYPE;
     else if (foundPreDefinitionHeader) {
         returnVal = DEFINITION_TYPE;
     } else {
@@ -1783,8 +1793,7 @@ void ASFormatter::padParens(void) {
                     prevIsParenHeader = true;
                 }
                 // don't unpad variables
-                else if (prevWord == "int" ||
-                         prevWord == "void" ||
+                else if (prevWord == "int" || prevWord == "void" ||
                          (prevWord.length() >= 6 // check end of word for _t
                           && prevWord.compare(prevWord.length() - 2, 2, "_t") ==
                                  0)) {

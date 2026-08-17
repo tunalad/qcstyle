@@ -46,7 +46,8 @@ enum FormatStyle {
     STYLE_WHITESMITH,
     STYLE_BANNER,
     STYLE_GNU,
-    STYLE_LINUX
+    STYLE_LINUX,
+    STYLE_QUAKEC
 };
 
 enum BracketMode {
@@ -78,8 +79,7 @@ class ASSourceIterator {
 class ASResource {
   public:
     void buildAssignmentOperators(vector<const string *> &assignmentOperators);
-    void buildHeaders(vector<const string *> &headers,
-                      bool beautifier = false);
+    void buildHeaders(vector<const string *> &headers, bool beautifier = false);
     void buildIndentableHeaders(vector<const string *> &indentableHeaders);
     void
     buildNonAssignmentOperators(vector<const string *> &nonAssignmentOperators);
@@ -88,7 +88,8 @@ class ASResource {
     void buildOperators(vector<const string *> &operators);
     void buildPreBlockStatements(vector<const string *> &preBlockStatements);
     void buildPreCommandHeaders(vector<const string *> &preCommandHeaders);
-    void buildPreDefinitionHeaders(vector<const string *> &preDefinitionHeaders);
+    void
+    buildPreDefinitionHeaders(vector<const string *> &preDefinitionHeaders);
 
   public:
     static const string AS_IF, AS_ELSE;
@@ -127,7 +128,6 @@ class ASBase {
     string getCurrentWord(const string &line, size_t charNum) const;
 
   protected:
-
     // check if a specific character can be used in a legal
     // variable/function/struct name
     bool isLegalNameChar(char ch) const {

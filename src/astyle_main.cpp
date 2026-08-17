@@ -26,6 +26,7 @@
 
 #include "astyle_main.h"
 #include "ASHelp.h"
+#include "astyle.h"
 
 #include <cstdlib>
 #include <errno.h>
@@ -125,12 +126,14 @@ bool parseOption(ASFormatter &formatter, const string &arg,
         formatter.setFormattingStyle(STYLE_GNU);
     } else if (IS_OPTION(arg, "style=linux")) {
         formatter.setFormattingStyle(STYLE_LINUX);
+    } else if (IS_OPTION(arg, "style=quakec")) {
+        formatter.setFormattingStyle(STYLE_QUAKEC);
     } else if (isParamOption(arg, "A")) {
         int style = 0;
         string styleParam = GET_PARAM(arg, "A");
         if (styleParam.length() > 0)
             style = atoi(styleParam.c_str());
-        if (style < 1 || style > 7)
+        if (style < 1 || style > 8)
             isOptionError(arg, errorInfo);
         else if (style == 1)
             formatter.setFormattingStyle(STYLE_ALLMAN);
@@ -146,6 +149,8 @@ bool parseOption(ASFormatter &formatter, const string &arg,
             formatter.setFormattingStyle(STYLE_GNU);
         else if (style == 7)
             formatter.setFormattingStyle(STYLE_LINUX);
+        else if (style == 8)
+            formatter.setFormattingStyle(STYLE_QUAKEC);
     }
     // must check for mode=c
     else if (isParamOption(arg, "t", "indent=tab=")) {
