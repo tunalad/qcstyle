@@ -26,7 +26,6 @@
 
 #include "astyle_main.h"
 
-#include <algorithm>
 #include <cstdlib>
 #include <errno.h>
 #include <fstream>
@@ -246,43 +245,6 @@ bool parseOption(ASFormatter &formatter, const string &arg,
     } else if (IS_OPTIONS(arg, "x", "delete-empty-lines")) {
         formatter.setDeleteEmptyLinesMode(true);
     }
-    // depreciated options
-    // /////////////////////////////////////////////////////////////////////////////////////
-    // depreciated in release 1.22 - may be removed at an appropriate time
-    else if (IS_OPTION(arg, "style=kr")) {
-        formatter.setFormattingStyle(STYLE_KandR);
-    } else if (isParamOption(arg, "T", "force-indent=tab=")) {
-        // the 'T' option will already have been processed
-        int spaceNum = 4;
-        string spaceNumParam = GET_PARAMS(arg, "T", "force-indent=tab=");
-        if (spaceNumParam.length() > 0)
-            spaceNum = atoi(spaceNumParam.c_str());
-        if (spaceNum < 1 || spaceNum > 20)
-            isOptionError(arg, errorInfo);
-        else
-            formatter.setTabIndentation(spaceNum, true);
-    } else if (IS_OPTION(arg, "brackets=break-closing")) {
-        formatter.setBreakClosingHeaderBracketsMode(true);
-    }
-
-    else if (IS_OPTION(arg, "one-line=keep-blocks")) {
-        formatter.setBreakOneLineBlocksMode(false);
-    } else if (IS_OPTION(arg, "one-line=keep-statements")) {
-        formatter.setSingleStatementsMode(false);
-    } else if (IS_OPTION(arg, "pad=paren")) {
-        formatter.setParensOutsidePaddingMode(true);
-        formatter.setParensInsidePaddingMode(true);
-    } else if (IS_OPTION(arg, "pad=paren-out")) {
-        formatter.setParensOutsidePaddingMode(true);
-    } else if (IS_OPTION(arg, "pad=paren-in")) {
-        formatter.setParensInsidePaddingMode(true);
-    } else if (IS_OPTION(arg, "unpad=paren")) {
-        formatter.setParensUnPaddingMode(true);
-    } else if (IS_OPTION(arg, "pad=oper")) {
-        formatter.setOperatorPaddingMode(true);
-    }
-    // end depreciated options
-    // //////////////////////////////////////////////////////////////////////////////
     // Options used by console
     else if (IS_OPTIONS(arg, "n", "suffix=none")) {
         g_console.noBackup = true;
@@ -309,7 +271,7 @@ bool parseOption(ASFormatter &formatter, const string &arg,
 template <typename T> ASStreamIterator<T>::ASStreamIterator(T *in) {
     inStream = in;
     buffer.reserve(200);
-    eolWindows = eolLinux = eolMacOld = 0;
+    eolWindows = eolLinux = 0;
     peekStart = 0;
     prevLineDeleted = false;
     checkForEmptyLine = false;
@@ -364,13 +326,12 @@ string ASStreamIterator<T>::nextLine(bool emptyLineWasDeleted) {
 
     // find input end-of-line characters
     if (!inStream->eof()) {
-        if (ch == '\r') // CR+LF is windows otherwise Mac OS 9
+        if (ch == '\r') // CR+LF or CR is windows
         {
             if (peekCh == '\n') {
                 inStream->get(ch);
-                eolWindows++;
-            } else
-                eolMacOld++;
+            }
+            eolWindows++;
         } else // LF is Linux, allow for improbable LF/CR
         {
             if (peekCh == '\r') {
@@ -384,15 +345,10 @@ string ASStreamIterator<T>::nextLine(bool emptyLineWasDeleted) {
     }
 
     // set output end of line characters
-    if (eolWindows >= eolLinux) {
-        if (eolWindows >= eolMacOld)
-            strcpy(outputEOL, "\r\n"); // Windows (CR+LF)
-        else
-            strcpy(outputEOL, "\r"); // MacOld (CR)
-    } else if (eolLinux >= eolMacOld)
-        strcpy(outputEOL, "\n"); // Linux (LF)
+    if (eolWindows >= eolLinux)
+        strcpy(outputEOL, "\r\n"); // Windows (CR+LF)
     else
-        strcpy(outputEOL, "\r"); // MacOld (CR)
+        strcpy(outputEOL, "\n"); // Linux (LF)
 
     return buffer;
 }
@@ -475,9 +431,6 @@ bool ASConsole::formatFile(const string &fileName,
     if (!out)
         error("Could not open output file", tmpFileName.c_str());
 
-    // set the language mode to C
-    formatter.setCStyle();
-
     // format the file
 
     ASStreamIterator<istream> streamIterator(&in);
@@ -550,12 +503,12 @@ void ASConsole::printHelp() const {
     (*_err) << "suffix of \".orig\" added to the original filename.\n";
     (*_err) << endl;
     (*_err)
-        << "By default, qcstyle is set up to indent C files, with 4 spaces\n";
+        << "By default, qcstyle is set up to indent source files, with 4 spaces\n";
     (*_err) << "per indent, a maximal indentation of 40 spaces inside "
                "continuous statements,\n";
     (*_err) << "and NO formatting.\n";
     (*_err) << endl;
-    (*_err) << "Option's Format:\n";
+    (*_err) << "Options Format:\n";
     (*_err) << "----------------\n";
     (*_err) << "    Long options (starting with '--') must be written one at a "
                "time.\n";
@@ -592,7 +545,7 @@ void ASConsole::printHelp() const {
     (*_err) << "    Broken brackets, indented blocks, indent is 2 spaces.\n";
     (*_err) << endl;
     (*_err) << "    --style=linux  OR  -A7\n";
-    (*_err) << "    GNU style formatting/indenting.\n";
+    (*_err) << "    Linux style formatting/indenting.\n";
     (*_err) << "    Linux brackets, indent is 8 spaces.\n";
     (*_err) << endl;
     (*_err) << "Tab and Bracket Options:\n";

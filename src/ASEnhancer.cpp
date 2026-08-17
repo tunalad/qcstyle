@@ -46,10 +46,9 @@ ASEnhancer::~ASEnhancer() {}
  *
  * init() is called each time an ASFormatter object is initialized.
  */
-void ASEnhancer::init(int fileType, int _indentLength, string _indentString,
+void ASEnhancer::init(int _indentLength, string _indentString,
                       bool _caseIndent, bool _emptyLineFill) {
     // formatting variables from ASFormatter and ASBeautifier
-    ASBase::init(fileType);
     indentLength = _indentLength;
     if (_indentString.compare(0, 1, "\t") == 0)
         useTabs = true;
@@ -60,8 +59,6 @@ void ASEnhancer::init(int fileType, int _indentLength, string _indentString,
     emptyLineFill = _emptyLineFill;
 
     // unindent variables
-    lineNumber = 0;
-    bracketCount = 0;
     isInComment = false;
     isInQuote = false;
     switchDepth = 0;
@@ -86,8 +83,6 @@ void ASEnhancer::init(int fileType, int _indentLength, string _indentString,
 void ASEnhancer::enhance(string &line) {
     bool isSpecialChar = false;
     size_t lineLength = line.length();
-
-    lineNumber++;
 
     if (lineLength == 0 && !emptyLineFill)
         return;
@@ -140,9 +135,6 @@ void ASEnhancer::enhance(string &line) {
         // handle comments
 
         if (!(isInComment) && line.compare(i, 2, "//") == 0) {
-            // check for windows line markers
-            if (line.compare(i + 2, 1, "\xf0") > 0)
-                lineNumber--;
             break; // finished with the line
         } else if (!(isInComment) && line.compare(i, 2, "/*") == 0) {
             isInComment = true;
@@ -160,12 +152,6 @@ void ASEnhancer::enhance(string &line) {
         // if we have reached this far then we are NOT in a comment or string of
         // special characters
 
-        if (line[i] == '{')
-            bracketCount++;
-
-        if (line[i] == '}')
-            bracketCount--;
-
         bool isPotentialKeyword = isCharPotentialHeader(line, i);
 
         // ----------------  process switch statements
@@ -176,7 +162,7 @@ void ASEnhancer::enhance(string &line) {
             swVector.push_back(sw); // save current variables
             sw.switchBracketCount = 0;
             sw.unindentCase = false; // don't clear case until end of switch
-            i += 5;                  // bypass switch statement
+            i += sizeof("switch") - 2; // bypass "switch" keyword
             continue;
         }
 
@@ -244,10 +230,7 @@ void ASEnhancer::enhance(string &line) {
                     continue;
                 }
                 if (line[i] == ':') {
-                    if ((i + 1 < lineLength) && (line[i + 1] == ':'))
-                        i++; // bypass scope resolution operator
-                    else
-                        break; // found it
+                    break; // found it
                 }
             }
             i++;
@@ -287,16 +270,15 @@ void ASEnhancer::enhance(string &line) {
  *
  * @param line          a pointer to the line to unindent.
  * @param unindent      the number of tabsets to erase.
- * @return              the number of characters erased.
  */
-int ASEnhancer::unindentLine(string &line, const int unindent) const {
+void ASEnhancer::unindentLine(string &line, const int unindent) const {
     size_t whitespace = line.find_first_not_of(" \t");
 
     if (whitespace == string::npos) // if line is blank
         whitespace = line.length(); // must remove padding, if any
 
     if (whitespace == 0)
-        return 0;
+        return;
 
     size_t charsToErase; // number of chars to erase
 
@@ -305,17 +287,11 @@ int ASEnhancer::unindentLine(string &line, const int unindent) const {
         charsToErase = unindent;         // tabs to erase
         if (charsToErase <= whitespace)  // if there is enough whitespace
             line.erase(0, charsToErase); // erase the tabs
-        else
-            charsToErase = 0;
     } else {
         charsToErase = unindent * indentLength; // compute chars to erase
         if (charsToErase <= whitespace)         // if there is enough whitespace
             line.erase(0, charsToErase);        // erase the spaces
-        else
-            charsToErase = 0;
     }
-
-    return charsToErase;
 }
 
 } // end namespace astyle

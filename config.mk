@@ -10,5 +10,5 @@ PREFIX = ${HOME}/.local
 
 # compiler and linker
 CXX = g++
-CXXFLAGS = -std=c++14 -Os -Wall
+CXXFLAGS = -std=c++14 -Os -Wall -Wextra
 LDFLAGS = -s

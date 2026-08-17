@@ -38,7 +38,6 @@ const string ASResource::AS_CASE = string("case");
 const string ASResource::AS_DEFAULT = string("default");
 const string ASResource::AS_STRUCT = string("struct");
 const string ASResource::AS_UNION = string("union");
-const string ASResource::AS_EXTERN = string("extern");
 const string ASResource::AS_CONST = string("const");
 
 const string ASResource::AS_OPEN_BRACKET = string("{");
@@ -69,7 +68,6 @@ const string ASResource::AS_GR_EQUAL = string(">=");
 const string ASResource::AS_GR_GR = string(">>");
 const string ASResource::AS_LS_EQUAL = string("<=");
 const string ASResource::AS_LS_LS = string("<<");
-const string ASResource::AS_ARROW = string("->");
 const string ASResource::AS_AND = string("&&");
 const string ASResource::AS_OR = string("||");
 
@@ -87,8 +85,6 @@ const string ASResource::AS_BIT_NOT = string("~");
 const string ASResource::AS_BIT_XOR = string("^");
 const string ASResource::AS_QUESTION = string("?");
 const string ASResource::AS_COLON = string(":");
-const string ASResource::AS_COMMA = string(",");
-const string ASResource::AS_SEMICOLON = string(";");
 
 /**
  * Sort comparison function.
@@ -138,7 +134,7 @@ void ASResource::buildAssignmentOperators(
  *
  * @param headers       a reference to the vector to be built.
  */
-void ASResource::buildHeaders(vector<const string *> &headers, int fileType,
+void ASResource::buildHeaders(vector<const string *> &headers,
                               bool beautifier) {
     headers.push_back(&AS_IF);
     headers.push_back(&AS_ELSE);
@@ -150,9 +146,7 @@ void ASResource::buildHeaders(vector<const string *> &headers, int fileType,
     if (beautifier) {
         headers.push_back(&AS_CASE);
         headers.push_back(&AS_DEFAULT);
-
-        if (fileType == C_TYPE)
-            headers.push_back(&AS_CONST);
+        headers.push_back(&AS_CONST);
     }
     sort(headers.begin(), headers.end(), sortOnName);
 }
@@ -186,7 +180,6 @@ void ASResource::buildNonAssignmentOperators(
     nonAssignmentOperators.push_back(&AS_GR_GR);
     nonAssignmentOperators.push_back(&AS_LS_EQUAL);
     nonAssignmentOperators.push_back(&AS_LS_LS);
-    nonAssignmentOperators.push_back(&AS_ARROW);
     nonAssignmentOperators.push_back(&AS_AND);
     nonAssignmentOperators.push_back(&AS_OR);
 
@@ -201,15 +194,14 @@ void ASResource::buildNonAssignmentOperators(
  * @param nonParenHeaders       a reference to the vector to be built.
  */
 void ASResource::buildNonParenHeaders(vector<const string *> &nonParenHeaders,
-                                      int fileType, bool beautifier) {
+                                      bool beautifier) {
     nonParenHeaders.push_back(&AS_ELSE);
     nonParenHeaders.push_back(&AS_DO);
 
     if (beautifier) {
         nonParenHeaders.push_back(&AS_CASE);
         nonParenHeaders.push_back(&AS_DEFAULT);
-        if (fileType == C_TYPE)
-            nonParenHeaders.push_back(&AS_CONST);
+        nonParenHeaders.push_back(&AS_CONST);
     }
     sort(nonParenHeaders.begin(), nonParenHeaders.end(), sortOnName);
 }
@@ -239,7 +231,6 @@ void ASResource::buildOperators(vector<const string *> &operators) {
     operators.push_back(&AS_LS_EQUAL);
     operators.push_back(&AS_LS_LS_ASSIGN);
     operators.push_back(&AS_LS_LS);
-    operators.push_back(&AS_ARROW);
     operators.push_back(&AS_AND);
     operators.push_back(&AS_OR);
     operators.push_back(&AS_PLUS);
@@ -269,11 +260,9 @@ void ASResource::buildOperators(vector<const string *> &operators) {
  * @param preBlockStatements        a reference to the vector to be built.
  */
 void ASResource::buildPreBlockStatements(
-    vector<const string *> &preBlockStatements, int fileType) {
-    if (fileType == C_TYPE) {
-        preBlockStatements.push_back(&AS_STRUCT);
-        preBlockStatements.push_back(&AS_UNION);
-    }
+    vector<const string *> &preBlockStatements) {
+    preBlockStatements.push_back(&AS_STRUCT);
+    preBlockStatements.push_back(&AS_UNION);
     sort(preBlockStatements.begin(), preBlockStatements.end(), sortOnName);
 }
 
@@ -284,10 +273,8 @@ void ASResource::buildPreBlockStatements(
  * @param preCommandHeaders     a reference to the vector to be built.
  */
 void ASResource::buildPreCommandHeaders(
-    vector<const string *> &preCommandHeaders, int fileType) {
-    if (fileType == C_TYPE) {
-        preCommandHeaders.push_back(&AS_CONST);
-    }
+    vector<const string *> &preCommandHeaders) {
+    preCommandHeaders.push_back(&AS_CONST);
 
     sort(preCommandHeaders.begin(), preCommandHeaders.end(), sortOnName);
 }
@@ -301,11 +288,9 @@ void ASResource::buildPreCommandHeaders(
  * @param preDefinitionHeaders      a reference to the vector to be built.
  */
 void ASResource::buildPreDefinitionHeaders(
-    vector<const string *> &preDefinitionHeaders, int fileType) {
-    if (fileType == C_TYPE) {
-        preDefinitionHeaders.push_back(&AS_STRUCT);
-        preDefinitionHeaders.push_back(&AS_UNION);
-    }
+    vector<const string *> &preDefinitionHeaders) {
+    preDefinitionHeaders.push_back(&AS_STRUCT);
+    preDefinitionHeaders.push_back(&AS_UNION);
     sort(preDefinitionHeaders.begin(), preDefinitionHeaders.end(), sortOnName);
 }
 

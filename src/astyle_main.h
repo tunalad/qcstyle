@@ -68,7 +68,6 @@ template <typename T> class ASStreamIterator : public ASSourceIterator {
     string prevBuffer;    // previous input line
     int eolWindows;       // number of Windows line endings (CRLF)
     int eolLinux;         // number of Linux line endings (LF)
-    int eolMacOld;        // number of old Mac line endings (CR)
     int peekStart;        // starting position for peekNextLine()
     char outputEOL[4];    // output end of line char
     bool prevLineDeleted; // the previous input line was deleted

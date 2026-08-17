@@ -38,8 +38,6 @@ using namespace std;
 
 namespace astyle {
 
-enum FileType { C_TYPE = 0 };
-
 enum FormatStyle {
     STYLE_NONE,
     STYLE_ALLMAN,
@@ -56,8 +54,7 @@ enum BracketMode {
     ATTACH_MODE,
     BREAK_MODE,
     LINUX_MODE,
-    STROUSTRUP_MODE,
-    BDAC_MODE = LINUX_MODE
+    STROUSTRUP_MODE
 };
 
 enum BracketType {
@@ -81,27 +78,24 @@ class ASSourceIterator {
 class ASResource {
   public:
     void buildAssignmentOperators(vector<const string *> &assignmentOperators);
-    void buildHeaders(vector<const string *> &headers, int fileType,
+    void buildHeaders(vector<const string *> &headers,
                       bool beautifier = false);
     void buildIndentableHeaders(vector<const string *> &indentableHeaders);
     void
     buildNonAssignmentOperators(vector<const string *> &nonAssignmentOperators);
     void buildNonParenHeaders(vector<const string *> &nonParenHeaders,
-                              int fileType, bool beautifier = false);
+                              bool beautifier = false);
     void buildOperators(vector<const string *> &operators);
-    void buildPreBlockStatements(vector<const string *> &preBlockStatements,
-                                 int fileType);
-    void buildPreCommandHeaders(vector<const string *> &preCommandHeaders,
-                                int fileType);
-    void buildPreDefinitionHeaders(vector<const string *> &preDefinitionHeaders,
-                                   int fileType);
+    void buildPreBlockStatements(vector<const string *> &preBlockStatements);
+    void buildPreCommandHeaders(vector<const string *> &preCommandHeaders);
+    void buildPreDefinitionHeaders(vector<const string *> &preDefinitionHeaders);
 
   public:
     static const string AS_IF, AS_ELSE;
     static const string AS_DO, AS_WHILE;
     static const string AS_FOR;
     static const string AS_SWITCH, AS_CASE, AS_DEFAULT;
-    static const string AS_STRUCT, AS_UNION, AS_EXTERN;
+    static const string AS_STRUCT, AS_UNION;
     static const string AS_CONST;
     static const string AS_OPEN_BRACKET, AS_CLOSE_BRACKET;
     static const string AS_OPEN_LINE_COMMENT, AS_OPEN_COMMENT, AS_CLOSE_COMMENT;
@@ -114,17 +108,14 @@ class ASResource {
     static const string AS_EQUAL, AS_PLUS_PLUS, AS_MINUS_MINUS, AS_NOT_EQUAL,
         AS_GR_EQUAL, AS_GR_GR;
     static const string AS_LS_EQUAL, AS_LS_LS;
-    static const string AS_ARROW, AS_AND, AS_OR;
+    static const string AS_AND, AS_OR;
     static const string AS_PLUS, AS_MINUS, AS_MULT, AS_DIV, AS_MOD, AS_GR,
         AS_LS;
     static const string AS_NOT, AS_BIT_XOR, AS_BIT_OR, AS_BIT_AND, AS_BIT_NOT;
-    static const string AS_QUESTION, AS_COLON, AS_SEMICOLON, AS_COMMA;
+    static const string AS_QUESTION, AS_COLON;
 };
 
 class ASBase {
-  private:
-    int fileType; // a value from enum FileType
-
   protected:
     ASBase() {};
     ~ASBase() {};
@@ -134,11 +125,9 @@ class ASBase {
     string getCurrentWord(const string &line, size_t charNum) const;
 
   protected:
-    void init(int fileTypeArg) { fileType = fileTypeArg; }
-    bool isCStyle() const { return (fileType == C_TYPE); }
 
     // check if a specific character can be used in a legal
-    // variable/method/class name
+    // variable/function/struct name
     bool isLegalNameChar(char ch) const {
         if (isWhiteSpace(ch))
             return false;
@@ -201,13 +190,10 @@ class ASBeautifier : protected ASResource, protected ASBase {
     void setBracketIndent(bool state);
     void setBlockIndent(bool state);
     void setLabelIndent(bool state);
-    void setCStyle();
     void setEmptyLineFill(bool state);
     void setPreprocessorIndent(bool state);
-    int getFileType();
     int getIndentLength(void);
     string getIndentString(void);
-    char peekNextChar(const string &line, int i) const;
     bool getBracketIndent(void);
     bool getBlockIndent(void);
     bool getCaseIndent(void);
@@ -225,7 +211,6 @@ class ASBeautifier : protected ASResource, protected ASBase {
     string trim(const string &str);
 
     // variables set by ASFormatter - must be updated in activeBeautifierStack
-    int inLineNumber;
     bool lineCommentNoBeautify;
     bool isNonInStatementArray;
 
@@ -266,7 +251,6 @@ class ASBeautifier : protected ASResource, protected ASBase {
   private: // variables
     string indentString;
     const string *currentHeader;
-    const string *previousLastLineHeader;
     const string *probationHeader;
     bool isInQuote;
     bool haveLineContinuationChar;
@@ -292,11 +276,9 @@ class ASBeautifier : protected ASResource, protected ASBase {
     bool blockCommentNoIndent;
     bool blockCommentNoBeautify;
     bool previousLineProbationTab;
-    int fileType;
     int minConditionalIndent;
     int parenDepth;
     int indentLength;
-    int blockTabCount;
     int leadingWhiteSpaces;
     int maxInStatementIndent;
     int prevFinalLineSpaceTabCount;
@@ -305,17 +287,14 @@ class ASBeautifier : protected ASResource, protected ASBase {
     char quoteChar;
     char prevNonSpaceCh;
     char currentNonSpaceCh;
-    char currentNonLegalCh;
-    char prevNonLegalCh;
 };
 
 class ASEnhancer : protected ASBase {
   public: // functions
     ASEnhancer();
     ~ASEnhancer();
-    void init(int, int, string, bool, bool);
+    void init(int, string, bool, bool);
     void enhance(string &line);
-    char peekNextChar(const string &line, int i) const;
 
   private:
     // options from command line or options file
@@ -325,18 +304,16 @@ class ASEnhancer : protected ASBase {
     bool emptyLineFill;
 
     // parsing variables
-    int lineNumber;
     bool isInQuote;
     bool isInComment;
     char quoteChar;
 
     // unindent variables
-    int bracketCount;
     int switchDepth;
     bool lookingForCaseBracket;
     bool unindentNextLine;
 
-    // struct used by ParseFormattedLine function
+    // struct used by the indentation engine
     // contains variables used to unindent the case blocks
     struct switchVariables {
         int switchBracketCount;
@@ -348,7 +325,7 @@ class ASEnhancer : protected ASBase {
     vector<switchVariables> swVector; // stack vector of switch variables
 
   private: // functions
-    int unindentLine(string &line, const int unindent) const;
+    void unindentLine(string &line, const int unindent) const;
 };
 
 class ASFormatter : public ASBeautifier {
@@ -410,7 +387,6 @@ class ASFormatter : public ASBeautifier {
     void formatArrayBrackets(BracketType bracketType,
                              bool isOpeningArrayBracket);
     void adjustComments();
-    void setBreakBlocksVariables();
     void fixOptionVariableConflicts();
     void processPreprocessor();
     string peekNextText(const string &firstLine,
@@ -434,7 +410,6 @@ class ASFormatter : public ASBeautifier {
     string currentLine;
     string formattedLine;
     const string *currentHeader;
-    const string *previousOperator; // used ONLY by pad-oper
     char currentChar;
     char previousChar;
     char previousNonWSChar;
