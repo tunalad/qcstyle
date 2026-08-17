@@ -38,6 +38,9 @@ const string ASResource::AS_CASE = string("case");
 const string ASResource::AS_DEFAULT = string("default");
 const string ASResource::AS_STRUCT = string("struct");
 const string ASResource::AS_UNION = string("union");
+const string ASResource::AS_ENTITY = string("entity");
+const string ASResource::AS_VECTOR = string("vector");
+const string ASResource::AS_STRING = string("string");
 const string ASResource::AS_CONST = string("const");
 
 const string ASResource::AS_OPEN_BRACKET = string("{");
@@ -59,6 +62,7 @@ const string ASResource::AS_GR_GR_ASSIGN = string(">>=");
 const string ASResource::AS_LS_LS_ASSIGN = string("<<=");
 
 const string ASResource::AS_RETURN = string("return");
+const string ASResource::AS_LOCAL = string("local");
 
 const string ASResource::AS_EQUAL = string("==");
 const string ASResource::AS_PLUS_PLUS = string("++");
@@ -143,6 +147,10 @@ void ASResource::buildHeaders(vector<const string *> &headers,
     headers.push_back(&AS_DO);
     headers.push_back(&AS_SWITCH);
 
+    headers.push_back(&AS_ENTITY);
+    headers.push_back(&AS_VECTOR);
+    headers.push_back(&AS_STRING);
+
     if (beautifier) {
         headers.push_back(&AS_CASE);
         headers.push_back(&AS_DEFAULT);
@@ -160,6 +168,7 @@ void ASResource::buildHeaders(vector<const string *> &headers,
 void ASResource::buildIndentableHeaders(
     vector<const string *> &indentableHeaders) {
     indentableHeaders.push_back(&AS_RETURN);
+    indentableHeaders.push_back(&AS_LOCAL);
 
     sort(indentableHeaders.begin(), indentableHeaders.end(), sortOnName);
 }

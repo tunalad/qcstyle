@@ -32,7 +32,7 @@ void printHelp(std::ostream &out) {
     out << endl;
     out << "Usage:" << endl;
     out << "------" << endl;
-    out << "    qcstyle [OPTIONS] File1.qc, File2.qc, File3.qc [...]" << endl;
+    out << "    qcstyle [OPTIONS] File1, File2, File3 [...]" << endl;
     out << "    qcstyle [OPTIONS] < Original > Beautified" << endl;
     out << endl;
     out << "    Wildcards (* and ?) may be used. A 'recursive' option can" << endl;

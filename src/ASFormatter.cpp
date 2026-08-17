@@ -610,7 +610,7 @@ string ASFormatter::nextLine() {
             if (isCharImmediatelyPostOpenBlock ||
                 (isCharImmediatelyPostCloseBlock &&
                  shouldBreakOneLineStatements &&
-                 (isLegalNameChar(currentChar) && currentChar != '.') &&
+                 isLegalNameChar(currentChar) &&
                  !isCharImmediatelyPostComment)) {
                 previousCommandChar = ' ';
                 isInLineBreak = true;

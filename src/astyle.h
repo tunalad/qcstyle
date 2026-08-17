@@ -96,10 +96,12 @@ class ASResource {
     static const string AS_FOR;
     static const string AS_SWITCH, AS_CASE, AS_DEFAULT;
     static const string AS_STRUCT, AS_UNION;
+    static const string AS_ENTITY, AS_VECTOR, AS_STRING;
     static const string AS_CONST;
     static const string AS_OPEN_BRACKET, AS_CLOSE_BRACKET;
     static const string AS_OPEN_LINE_COMMENT, AS_OPEN_COMMENT, AS_CLOSE_COMMENT;
     static const string AS_RETURN;
+    static const string AS_LOCAL;
     static const string AS_ASSIGN, AS_PLUS_ASSIGN, AS_MINUS_ASSIGN,
         AS_MULT_ASSIGN;
     static const string AS_DIV_ASSIGN, AS_MOD_ASSIGN, AS_XOR_ASSIGN,
@@ -133,7 +135,7 @@ class ASBase {
             return false;
         if ((unsigned)ch > 127)
             return false;
-        return (isalnum(ch) || ch == '.' || ch == '_');
+        return (isalnum(ch) || ch == '_');
     }
 
     // check if a specific character can be part of a header
