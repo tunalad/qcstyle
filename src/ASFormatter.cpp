@@ -160,10 +160,6 @@ void ASFormatter::fixOptionVariableConflicts() {
         setBracketFormatMode(BREAK_MODE);
         setBlockIndent(false);
         setBracketIndent(false);
-        setSpaceIndentation(4);
-        setTabSpaceConversionMode(true);
-        setOperatorPaddingMode(true);
-        setParensUnPaddingMode(true);
         break;
     }
     // cannot have both bracketIndent and block Indent

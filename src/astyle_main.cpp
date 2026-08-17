@@ -56,6 +56,9 @@ const char *_version = VERSION;
  * parse the options vector
  * ITER can be an optionsVector (command line)
  *
+ * Style options (--style=*, -A*) are always applied first, regardless of
+ * argument order, so that additional options can override them.
+ *
  * @return        true if no errors, false if errors
  */
 template <typename ITER>
@@ -63,30 +66,53 @@ bool parseOptions(ASFormatter &formatter, const ITER &optionsBegin,
                   const ITER &optionsEnd, const string &errorInfo) {
     ITER option;
     bool ok = true;
-    string arg, subArg;
 
-    for (option = optionsBegin; option != optionsEnd; ++option) {
-        arg = *option;
+    auto isStyleOption = [](const string &normalized) {
+        return normalized.compare(0, 6, "style=") == 0 ||
+               isParamOption(normalized, "A");
+    };
 
-        if (arg.compare(0, 2, "--") == 0)
-            ok &= parseOption(formatter, arg.substr(2), errorInfo);
-        else if (arg[0] == '-') {
-            size_t i;
-
-            for (i = 1; i < arg.length(); ++i) {
-                if (isalpha(arg[i]) && i > 1) {
-                    ok &= parseOption(formatter, subArg, errorInfo);
-                    subArg = "";
+    // apply sub-options from a raw arg, filtering by style/non-style
+    auto applyArg = [&](const string &raw, bool styleOnly) -> bool {
+        bool result = true;
+        if (raw.compare(0, 2, "--") == 0) {
+            string normalized = raw.substr(2);
+            bool match = isStyleOption(normalized);
+            if (match == styleOnly)
+                result &= parseOption(formatter, normalized, errorInfo);
+        } else if (raw[0] == '-') {
+            // combined short options: -A8s4 → A8, s4
+            string subArg;
+            for (size_t i = 1; i < raw.length(); ++i) {
+                if (isalpha(raw[i]) && i > 1) {
+                    bool match = isStyleOption(subArg);
+                    if (match == styleOnly)
+                        result &= parseOption(formatter, subArg, errorInfo);
+                    subArg.clear();
                 }
-                subArg.append(1, arg[i]);
+                subArg.append(1, raw[i]);
             }
-            ok &= parseOption(formatter, subArg, errorInfo);
-            subArg = "";
+            if (!subArg.empty()) {
+                bool match = isStyleOption(subArg);
+                if (match == styleOnly)
+                    result &= parseOption(formatter, subArg, errorInfo);
+            }
         } else {
-            ok &= parseOption(formatter, arg, errorInfo);
-            subArg = "";
+            bool match = isStyleOption(raw);
+            if (match == styleOnly)
+                result &= parseOption(formatter, raw, errorInfo);
         }
-    }
+        return result;
+    };
+
+    // pass 1: apply style options first
+    for (option = optionsBegin; option != optionsEnd; ++option)
+        ok &= applyArg(*option, true);
+
+    // pass 2: apply all non-style options
+    for (option = optionsBegin; option != optionsEnd; ++option)
+        ok &= applyArg(*option, false);
+
     return ok;
 }
 
