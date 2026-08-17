@@ -1,5 +1,5 @@
 # qcstyle version
-VERSION = 1.0
+VERSION = 1.1
 
 # customize below to fit your system
 
