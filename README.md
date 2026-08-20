@@ -1,6 +1,6 @@
 # qcstyle
 
-Quaketastic Style is a free, fast, and small automatic formatter for C and QuakeC. Fork of [Artistic Style](https://astyle.sourceforge.net/) (astyle) 1.23, with a lot of code cut out. Works as a regular C formatter, with QuakeC-specific support built in.
+Quaketastic Style is a free, fast, and small automatic formatter for C and QuakeC. Fork of [Artistic Style](https://astyle.sourceforge.net/) (astyle) 1.23, with a lot of code cut out. Works as a regular C formatter, with QuakeC-specific support added.
 
 ## Features
 
@@ -27,10 +27,18 @@ Quaketastic Style is a free, fast, and small automatic formatter for C and Quake
 
 Requires a C++14 compiler and `make`. Build settings live in `config.mk`.
 
-```
+### Unix
+```sh
 git clone https://github.com/tunalad/qcstyle.git
 cd qcstyle
-make && make install
+make && make install # will install locally
+```
+
+### Windows (MSYS2/MinGW)
+```sh
+git clone https://github.com/tunalad/qcstyle.git
+cd qcstyle
+make win
 ```
 
 ## Usage
@@ -57,7 +65,7 @@ Run `qcstyle --help` for all options.
 
 ## Acknowledgments
 
-Based on [Artistic Style](https://astyle.sourceforge.net/) by Jim Pattee. See the [source repository](https://gitlab.com/saalen/astyle) for the original project.
+Based on [Artistic Style](https://astyle.sourceforge.net/) by Jim Pattee.
 
 ## License
 

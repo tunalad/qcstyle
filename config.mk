@@ -6,9 +6,10 @@ VERSION = 1.1
 # paths
 #PREFIX = /usr/local
 PREFIX = ${HOME}/.local
-#MANPREFIX = ${PREFIX}/share/man
 
 # compiler and linker
 CXX = g++
+CROSS_CXX = x86_64-w64-mingw32-g++
+
 CXXFLAGS = -std=c++14 -Os -Wall -Wextra -DVERSION=\"${VERSION}\"
 LDFLAGS = -s

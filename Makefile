@@ -9,14 +9,21 @@ TARGET = qcstyle
 
 all: ${TARGET}
 
-.cpp.o:
+src/%.o: src/%.cpp
 	${CXX} -c ${CXXFLAGS} $< -o $@
 
+# unix
 ${TARGET}: ${OBJ}
 	${CXX} -o $@ ${OBJ} ${LDFLAGS}
 
+# windows
+${TARGET}.exe: ${SRC}
+	${CROSS_CXX} -std=c++14 -Os -Wall -Wextra -DVERSION=\"${VERSION}\" $^ -o $@ -s -static -static-libgcc -static-libstdc++
+
+win: ${TARGET}.exe
+
 clean:
-	rm -f ${TARGET} ${OBJ} ${TARGET}-${VERSION}.tar.gz
+	rm -f ${TARGET} ${TARGET}.exe ${OBJ}
 
 dist: clean
 	mkdir -p ${TARGET}-${VERSION}
@@ -33,4 +40,11 @@ install: all
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/${TARGET}
 
-.PHONY: all options clean dist install uninstall
+help:
+	@echo "  make            build for current system"
+	@echo "  make win        cross-compile for Windows (needs mingw-w64)"
+	@echo "  make clean      remove build artifacts"
+	@echo "  make install    install to ${PREFIX}/bin"
+	@echo "  make dist       create release tarball"
+
+.PHONY: all clean dist install uninstall win help
